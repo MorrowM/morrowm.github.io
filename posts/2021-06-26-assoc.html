@@ -48,7 +48,7 @@
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> <span class="dt">IntMap</span> <span class="kw">where</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">IntMap.!?</span>)</span></code></pre></div>
 <p>But now, we decide that we also want to be able to index <code>Map</code>s as well. The issue is that we’ve already hard-coded the index type to be <code>Int</code>.</p>
-<h2 id="associated-type-families">Associated Type families</h2>
+<h2 id="associated-type-families">Associated Type Families</h2>
 <p>One way to allow arbitrary index types is to use an associated type family:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeFamilies #-}</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
