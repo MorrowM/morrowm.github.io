@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Associated Types In Two Different Ways - MorrowM</title>
+    <link rel="stylesheet" href="../css/default.css" />
+    <link rel="stylesheet" href="../css/highlightjs.css">
+    <script src="../js/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <a href="../">MorrowM</a>
+        </div>
+        <nav>
+            <a href="../">Home</a>
+            <a href="../archive.html">Archive</a>
+        </nav>
+    </header>
+
+    <main role="main">
+        <h1>Associated Types In Two Different Ways</h1>
+        <article>
+    <section class="header">
+        Posted on June 26, 2021
+        
+    </section>
+    <section>
+        <p>Suppose you wanted to write a type class for indexable containers. It might look something like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span></code></pre></div>
+<p>We could then go on to write instances for our favorite types:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [] <span class="op">!?</span> _ <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  (x<span class="op">:</span>xs) <span class="op">!?</span> n</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> n <span class="op">==</span> <span class="dv">0</span>    <span class="ot">=</span> <span class="dt">Just</span> x</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> n <span class="op">&gt;</span> <span class="dv">0</span>     <span class="ot">=</span> xs <span class="op">!?</span> (n <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> <span class="dt">Vector</span> <span class="kw">where</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">V.!?</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> <span class="dt">IntMap</span> <span class="kw">where</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">IntMap.!?</span>)</span></code></pre></div>
+<p>But now, we decide that we also want to be able to index <code>Map</code>s as well. The issue is that we’ve already hard-coded the index type to be <code>Int</code>.</p>
+<h2 id="associated-type-families">Associated Type families</h2>
+<p>One way to allow arbitrary index types is to use an associated type family:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeFamilies #-}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f <span class="kw">where</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Idx</span> f</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> <span class="dt">Idx</span> f <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="kw">where</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Idx</span> [] <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ...</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> (<span class="dt">Map</span> k) <span class="kw">where</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Idx</span> (<span class="dt">Map</span> k) <span class="ot">=</span> k</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">Map.!?</span>)</span></code></pre></div>
+<p>Say we want to write the following function:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">fifthElem ::</span> <span class="dt">Indexed</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>fifthElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
+<p>We’d get a type error:</p>
+<pre><code>• Couldn't match expected type ‘Idx f’ with actual type ‘Int’</code></pre>
+<p>Fair enough, this function obviously won’t work for just any indexable container, only ones that are indexed by <code>Int</code>s. We can resolve this by adding a constraint:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> (<span class="dt">Indexed</span> f, <span class="dt">Idx</span> f <span class="op">~</span> <span class="dt">Int</span>) <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
+<p>For those unfamiliar, <code>~</code> here is an operator provided by GHC that yields a constraint that the type on the left equals the type on the right. In this case, by constraining <code>Idx f</code> to equal <code>Int</code>, GHC can now add that to its list of known facts, so we don’t get that type error anymore. <code>~</code> is enabled by both the <code>TypeFamilies</code> extension and the <code>GADTs</code> extension.</p>
+<h2 id="multi-parameter-type-classes">Multi-parameter Type Classes</h2>
+<p>Another way we can encode this information, the type of the index, would be to add an additional parameter to the type class.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE MultiParamTypeClasses #-}</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f idx <span class="kw">where</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> idx <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="dt">Int</span> <span class="kw">where</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ...</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> (<span class="dt">Map</span> k) k <span class="kw">where</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">Map.!?</span>)</span></code></pre></div>
+<p>We can then write <code>firstElem</code> in a straightforward manner.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> <span class="dt">Indexed</span> f <span class="dt">Int</span> <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
+<p>Yes! This type checks just fine.</p>
+<p>All is good, right? Well, let’s try and use this instance.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">c ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>c <span class="ot">=</span> <span class="st">&quot;hello&quot;</span> <span class="op">!?</span> <span class="dv">3</span></span></code></pre></div>
+<p>Oh no! When we compile, we get errors:</p>
+<pre><code>• Ambiguous type variable ‘idx0’ arising from a use of ‘!?’
+      prevents the constraint ‘(Indexed [] idx0)’ from being solved.
+      Probable fix: use a type annotation to specify what ‘idx0’ should be.
+
+• Ambiguous type variable ‘idx0’ arising from the literal ‘3’
+      prevents the constraint ‘(Num idx0)’ from being solved.
+      Probable fix: use a type annotation to specify what ‘idx0’ should be.</code></pre>
+<p>Now sure, if we add a type signature to the literal <code>3</code>, then the error goes away, but this is really not ideal. Ideally, we’d like the compiler to infer right away that since we’re indexing a list, the index type <em>must</em> be <code>Int</code>. This is indeed what happens when we use an associated type family, but not here.</p>
+<h3 id="functional-dependencies">Functional Dependencies</h3>
+<p>The core issue here is that there’s nothing stopping someone from writing their own instance:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="dt">Integer</span> <span class="kw">where</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span></code></pre></div>
+<p>This is a completely valid instance that doesn’t overlap with our own. Therefore, GHC can’t infer that the literal <code>0</code> must be an <code>Int</code>, since it can just as well be an <code>Integer</code>, or any number of types, really.</p>
+<p>The solution is to add a functional dependency.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE FunctionalDependencies #-}</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f idx <span class="op">|</span> f <span class="ot">-&gt;</span> idx <span class="kw">where</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> idx <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ot">x ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="st">&quot;hello&quot;</span> <span class="op">!?</span> <span class="dv">3</span></span></code></pre></div>
+<p>What this syntax means is that the type variable <code>f</code> must <em>uniquely</em> determine the type variable <code>idx</code>. This has two effects. One, if we have an instance <code>instance Indexed [] Int</code>, then we can’t go ahead and write another instance <code>instance Indexed [] Integer</code>, since then <code>f</code> doesn’t uniquely determine <code>idx</code>. Two, GHC can now infer the type of <code>idx</code> just from knowing what <code>f</code> is, so our program will now type check. GHC will see we’re indexing a list, and therefore the index type <em>must</em> be <code>Int</code>, so the type of the literal <code>3</code> here must be <code>Int</code>.</p>
+<p>Looking back, when we used a type family, we were doing the same thing, only implicitly. When we write <code>Idx f</code> it’s implicit that <code>Idx</code> gives back a single type when applied. In other words, <code>f</code> <em>uniquely</em> determines <code>Idx f</code>.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p>Both of these methods give very similar results, but it’s good to be familiar with both of them, as they can have different ergonomics. It’s also good to be able to recognize both of these patterns in other libraries, as they’re both used throughout Hackage.</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>Interestingly, we can go in the other direction with the <a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/exts/type_families.html#extension-TypeFamilyDependencies"><code>TypeFamilyDependencies</code></a> extension.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+    </section>
+</article>
+
+    </main>
+
+    <footer>
+        Site proudly generated by
+        <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+    </footer>
+</body>
+
+</html>
