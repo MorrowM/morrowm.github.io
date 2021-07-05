@@ -107,7 +107,7 @@
 <p>Let’s begin by building the skeleton for our project. Initialize a fresh cabal project by running <code>cabal init</code> in an empty directory. We’ll start by putting the adding the following dependencies in our <code>bot.cabal</code> file under <code>build-depends</code>.</p>
 <pre class="cabal"><code>  build-depends:
     , base             ^&gt;=4.14.1.0
-    , calamity         ^&gt;=0.1.28.5
+    , calamity         &gt;=0.1.30   &amp;&amp; &lt;0.1.31
     , data-default
     , data-flags
     , di
@@ -133,30 +133,32 @@
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Calamity</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Calamity.Cache.InMemory</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Calamity.Commands</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Calamity.Metrics.Noop</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Control.Lens</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Control.Monad</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Default</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Generics.Labels</span>    ()</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Maybe</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Text.Lazy</span>          (<span class="dt">Text</span>)</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text.Lazy</span>          <span class="kw">as</span> <span class="dt">T</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Di</span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">DiPolysemy</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Polysemy</span>                <span class="kw">as</span> <span class="dt">P</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> Di.new <span class="op">$</span> \di <span class="ot">-&gt;</span></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  void</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> P.runFinal</span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> P.embedToFinal <span class="op">@</span><span class="dt">IO</span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runDiToIO di</span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runCacheInMemory</span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runMetricsNoop</span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> useConstantPrefix <span class="st">&quot;!&quot;</span></span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runBotIO (<span class="dt">BotToken</span> <span class="st">&quot;&lt;token&gt;&quot;</span>) defaultIntents</span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span></code></pre></div>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Calamity.Commands.Context</span> (useFullContext)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Calamity.Metrics.Noop</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Control.Lens</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Control.Monad</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Default</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Generics.Labels</span>      ()</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Maybe</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Data.Text.Lazy</span>            (<span class="dt">Text</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text.Lazy</span>            <span class="kw">as</span> <span class="dt">T</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Di</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">DiPolysemy</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Polysemy</span>                  <span class="kw">as</span> <span class="dt">P</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> Di.new <span class="op">$</span> \di <span class="ot">-&gt;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  void</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> P.runFinal</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> P.embedToFinal <span class="op">@</span><span class="dt">IO</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runDiToIO di</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runCacheInMemory</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runMetricsNoop</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> useFullContext</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> useConstantPrefix <span class="st">&quot;!&quot;</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runBotIO (<span class="dt">BotToken</span> <span class="st">&quot;&lt;token&gt;&quot;</span>) defaultIntents</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span></code></pre></div>
 <p>Let’s break this down bit by bit.</p>
 <p><code>Di.new</code> has the type</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">new ::</span> (<span class="dt">Di</span> <span class="dt">Level</span> <span class="dt">Path</span> <span class="dt">Message</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> a) <span class="ot">-&gt;</span> <span class="dt">IO</span> a</span></code></pre></div>
@@ -186,151 +188,158 @@
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ot">useConstantPrefix ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">ParsePrefix</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p>Having this interpreter will strip off the <code>ParsePrefix</code> effect, which will be required when we want to register commands later.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runMetricsNoop</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> useFullContext</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runMetricsNoop` has the type:</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runMetricsNoop ::</span> <span class="dt">Sem</span> (<span class="dt">MetricEff</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
-<p><code>runMetricsNoop</code> will strip off the <code>MetricEff</code> effect by ignoring any metrics that were collected. <code>calamity</code> doesn’t provide any other interpreter for the <code>MetricEff</code> effect, but if we wanted to we could write our own. That’s outside the scope of this post, however.</p>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `useFullContext` has the type:</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ot">useFullContext ::</span> <span class="dt">Member</span> <span class="dt">CacheEff</span> r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">ConstructContext</span> <span class="dt">Message</span> <span class="dt">FullContext</span> <span class="dt">IO</span> () '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<p><code>useConstantPrefix</code> handles the <code>ConstructContext</code> effect, which determines what information we receive when a command is invoked.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runCacheInMemory</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runMetricsNoop</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runCacheInMemory` has the type:</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runCacheInMemory ::</span> <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">CacheEff</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
-<p><code>runCacheInMemory</code> strips the <code>CacheEff</code> for us by storing the cache in memory. If we wanted to we could write an effect interpreter that stores the cache in a file or database.</p>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runMetricsNoop` has the type:</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runMetricsNoop ::</span> <span class="dt">Sem</span> (<span class="dt">MetricEff</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<p><code>runMetricsNoop</code> will strip off the <code>MetricEff</code> effect by ignoring any metrics that were collected. <code>calamity</code> doesn’t provide any other interpreter for the <code>MetricEff</code> effect, but if we wanted to we could write our own. That’s outside the scope of this post, however.</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runDiToIO di</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runCacheInMemory</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runDiToIO` has the type:</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>runDiToIO</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> r level msg a<span class="op">.</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>     <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Di</span> level <span class="dt">Path</span> msg</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">Di</span> level <span class="dt">Path</span> msg '<span class="op">:</span> r) a</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runCacheInMemory` has the type:</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runCacheInMemory ::</span> <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">CacheEff</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<p><code>runCacheInMemory</code> strips the <code>CacheEff</code> for us by storing the cache in memory. If we wanted to we could write an effect interpreter that stores the cache in a file or database.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runDiToIO di</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runDiToIO` has the type:</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>runDiToIO</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> r level msg a<span class="op">.</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>     <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Di</span> level <span class="dt">Path</span> msg</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">Di</span> level <span class="dt">Path</span> msg '<span class="op">:</span> r) a</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p><code>runDiToIO</code> will interpret our <code>di</code> logging effect. Note that the <code>LogEff</code> effect mentioned earlier is just a type alias for <code>Di Level Path Message</code>, so this is just an interpreter for the <code>LogEff</code> effect.</p>
 <h2 id="our-first-event-handler">Our First Event Handler</h2>
 <p>Let’s create an event handler that will do something wholesome, like react with 😄 on any message containing the string “Haskell”.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageCreateEvt</span> <span class="op">$</span> \msg <span class="ot">-&gt;</span> <span class="kw">do</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>      when (<span class="st">&quot;Haskell&quot;</span> <span class="ot">`T.isInfixOf`</span> (msg <span class="op">^.</span> <span class="op">#</span>content)) <span class="op">$</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> msg msg (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageCreateEvt</span> <span class="op">$</span> \msg <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>      when (<span class="st">&quot;Haskell&quot;</span> <span class="ot">`T.isInfixOf`</span> (msg <span class="op">^.</span> <span class="op">#</span>content)) <span class="op">$</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> msg msg (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span></code></pre></div>
 <p><code>react</code> is a function that registers an event handler.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>react</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> (<span class="ot">s ::</span> <span class="dt">EventType</span>) r<span class="op">.</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">BotC</span> r, <span class="dt">ReactConstraints</span> s)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> (<span class="dt">EHType</span> s <span class="ot">-&gt;</span> <span class="dt">Sem</span> r ())</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Sem</span> r ())</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>react</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> (<span class="ot">s ::</span> <span class="dt">EventType</span>) r<span class="op">.</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">BotC</span> r, <span class="dt">ReactConstraints</span> s)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> (<span class="dt">EHType</span> s <span class="ot">-&gt;</span> <span class="dt">Sem</span> r ())</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Sem</span> r ())</span></code></pre></div>
 <p>The type of event we want to handle has to be passed in as a <em>type argument</em> using the <code>TypeApplications</code> extension, which allows us to instantiate type variables to a specific concrete type. <code>calamity</code> provides the <code>EventType</code> datatype which is a simple enumeration, one of the values being <code>MessageCreateEvt</code>. <code>react</code> expects a type variable with the <em>kind</em> <code>EventType</code>, meaning <code>EventType</code> is used as a data-kind. All this means is that the type <code>EventType</code> is promoted from the type level to the kind level. Its values, such as <code>MessageCreateEvt</code>, are promoted from the term level to the type level. Just as the type <code>Int</code> has kind <code>Type</code>, the type <code>'MessageCreateEvt</code> has the kind <code>EventType</code>. Notice the tick mark on <code>'MessageCreateEvt</code>. This is to differentiate the value <code>MessageCreateEvt</code> from the type. Usually, GHC can infer this without us explicitly specifying it, and indeed here it’s not required, but we’ll leave it in just to be explicit.</p>
 <p>Also, note that the effect row that <code>react</code> uses has a <code>BotC</code> constraint which is just an alias for a few other constraints. We won’t go into the details here, but just know that the <code>runBotIO</code> interpreter handles these constraints for us.</p>
 <p><code>react</code> also expects a function as an argument, the handler body. The type of the input to the body depends on the <code>EventType</code> we specified; different types of events have different data associated with them. This is determined by the <code>EHType</code> type family. For those unfamiliar, a type family is essentially a function that operates on <em>types</em> rather than terms. In the case of <code>EHType</code>, it takes a type with kind <code>EventType</code> (remember, <code>DataKinds</code> promotes <code>EventType</code> to the kind level) and gives us a type. So in our case, <code>EHType 'MessageCreateEvt = Messaage</code>. That means our event handler’s body should have the type <code>Message -&gt; Sem r ()</code>.</p>
 <p>So for the actual body, we want to take the message and perform an action conditional on the message’s content. We use the <code>when</code> function from <code>Control.Monad</code>, which conditionally performs a monadic/applicative action.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ot">when ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> f () <span class="ot">-&gt;</span> f ()</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ot">when ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> f () <span class="ot">-&gt;</span> f ()</span></code></pre></div>
 <p>To access the message’s content we use <code>generic-lens</code> to <code>view</code> the <code>content</code> field of the message (remember that <code>(^.)</code> is just the infix counterpart to <code>view</code>).</p>
 <p>To create the action, we’ll need to create a “create reaction” request, specifically a <code>ChannelRequest</code>.</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">CreateReaction</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">HasID</span> <span class="dt">Channel</span> c, <span class="dt">HasID</span> <span class="dt">Message</span> m)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> c</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> m</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">RawEmoji</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">ChannelRequest</span> ()</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">CreateReaction</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">HasID</span> <span class="dt">Channel</span> c, <span class="dt">HasID</span> <span class="dt">Message</span> m)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> c</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> m</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">RawEmoji</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">ChannelRequest</span> ()</span></code></pre></div>
 <p><code>CreateReaction</code> is polymorphic in its first two arguments. Rather than requiring a concrete <code>Snowflake</code> for the channel and message to react to, which, it only requires that it’s possible to extract a <code>Snowflake</code> from the inputs. It does this via a typeclass, <code>HasID</code>, which has two type parameters- the type of the <code>Snowflake</code> we wish to extract and the type of the thing to extract from. It has a single method, <code>HasID b a =&gt; getID :: a -&gt; Snowflake b</code>. If we look at the instances for <code>HasID</code> we see that there are indeed instances <code>HasID Channel Message</code> and <code>HasID Message Message</code>. To illustrate the convenience that this technique gives us, this is what our handler would look like if <code>CreateReaction</code> required concrete <code>Snowflake</code>s.</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> (msg <span class="op">^.</span> <span class="op">#</span>channelID) (msg <span class="op">^.</span> <span class="op">#</span>id) (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> (msg <span class="op">^.</span> <span class="op">#</span>channelID) (msg <span class="op">^.</span> <span class="op">#</span>id) (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span></code></pre></div>
 <p>Okay, so now that we have our <code>ChannelRequest</code> we can use the <code>invoke</code> function to run it.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>invoke</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">BotC</span> r, <span class="dt">Request</span> a, <span class="dt">FromJSON</span> (<span class="dt">Result</span> a))</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> a</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Either</span> <span class="dt">RestError</span> (<span class="dt">Result</span> a))</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>invoke</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">BotC</span> r, <span class="dt">Request</span> a, <span class="dt">FromJSON</span> (<span class="dt">Result</span> a))</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> a</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Either</span> <span class="dt">RestError</span> (<span class="dt">Result</span> a))</span></code></pre></div>
 <p>Here, <code>Request</code> is a typeclass for which every <code>ChannelRequest a</code> has an instance, and <code>Result</code> is a type family which extracts the type <code>a</code> from a <code>ChannelRequest a</code>.</p>
 <p>In our case, since we don’t need the result of the request, we can discard it using the <code>void</code> function from <code>Control.Monad</code>.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ot">void ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f ()</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ot">void ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f ()</span></code></pre></div>
 <p>One last thing to note about <code>react</code> is that it returns an action that you can use to unregister it, hence the output being <code>Sem r (Sem r ())</code>.</p>
 <p>That’s it! That’s our event handler. You can try it out yourself by putting your bot token in the <code>runBotIO</code> interpreter and running the project.</p>
 <h2 id="adding-a-command">Adding a command</h2>
 <p>Let’s add a command to enable (or disable) slow mode at a given duration, optionally specifying a channel, defaulting to the channel the command was invoked in.</p>
 <p>Luckily for us, <code>calamity</code> provides a handy DSL for creating commands.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> msg msg (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    addCommands <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>      helpCommand</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>      command <span class="op">@</span>'[<span class="dt">Int</span>, <span class="dt">Maybe</span> <span class="dt">GuildChannel</span>] <span class="st">&quot;slowmode&quot;</span> <span class="op">$</span> \ctx seconds mchan <span class="ot">-&gt;</span> <span class="kw">do</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> cid <span class="ot">=</span> <span class="fu">maybe</span> (ctx <span class="op">^.</span> <span class="op">#</span>channel <span class="op">.</span> to getID) getID<span class="ot"> mchan ::</span> <span class="dt">Snowflake</span> <span class="dt">Channel</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">ModifyChannel</span> cid <span class="op">$</span> def</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> <span class="op">#</span>rateLimitPerUser <span class="op">?~</span> seconds</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>          <span class="dt">CreateReaction</span> (ctx <span class="op">^.</span> <span class="op">#</span>channel) (ctx <span class="op">^.</span> <span class="op">#</span>message) (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;✅&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> msg msg (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    addCommands <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>      helpCommand</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>      command <span class="op">@</span>'[<span class="dt">Int</span>, <span class="dt">Maybe</span> <span class="dt">GuildChannel</span>] <span class="st">&quot;slowmode&quot;</span> <span class="op">$</span> \ctx seconds mchan <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> cid <span class="ot">=</span> <span class="fu">maybe</span> (ctx <span class="op">^.</span> <span class="op">#</span>channel <span class="op">.</span> to getID) getID<span class="ot"> mchan ::</span> <span class="dt">Snowflake</span> <span class="dt">Channel</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">ModifyChannel</span> cid <span class="op">$</span> def</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> <span class="op">#</span>rateLimitPerUser <span class="op">?~</span> seconds</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>          <span class="dt">CreateReaction</span> (ctx <span class="op">^.</span> <span class="op">#</span>channel) (ctx <span class="op">^.</span> <span class="op">#</span>message) (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;✅&quot;</span>)</span></code></pre></div>
 <p>Registering commands is done with the <code>addCommands</code> function.</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>addCommands</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">BotC</span> r, <span class="dt">Member</span> <span class="dt">ParsePrefix</span> r)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">DSLState</span> r) a</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Sem</span> r (), <span class="dt">CommandHandler</span>, a)</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>addCommands</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">BotC</span> r, <span class="dt">Member</span> <span class="dt">ParsePrefix</span> r)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">DSLState</span> r) a</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Sem</span> r (), <span class="dt">CommandHandler</span>, a)</span></code></pre></div>
 <p>It constructs the commands and registers the proper event handlers to handle them. It requires the <code>ParsePrefix</code> effect to be present in the effect row. It also allows extra effects in the input’s effect row which are used to track the state of the command DSL, using the type alias <code>DSLState</code>. It yields an action to unregister the event handlers, and an object representing the commands that were registered.</p>
 <p><code>helpCommand</code> will add a default help command in the DSL.</p>
 <p>To create a command, we use the <code>command</code> function</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>command</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> ps r<span class="op">.</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">Member</span> (<span class="dt">Final</span> <span class="dt">IO</span>) r, <span class="dt">TypedCommandC</span> ps r)</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Text</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> (<span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">CommandForParsers</span> ps r)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">DSLState</span> r) <span class="dt">Command</span></span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>command</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> ps r<span class="op">.</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">Member</span> (<span class="dt">Final</span> <span class="dt">IO</span>) r, <span class="dt">TypedCommandC</span> ps r)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Text</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> (<span class="dt">Context</span> <span class="ot">-&gt;</span> <span class="dt">CommandForParsers</span> ps r)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">DSLState</span> r) <span class="dt">Command</span></span></code></pre></div>
 <p><code>command</code> takes a command name and a command body and adds a command in the DSL. It also takes a type-level list of command arguments, which it uses to parse the inputs and compute the type of the command body.</p>
 <p>In our case, we pass the type-level list <code>'[Int, Maybe GuildChannel]</code> (using <code>TypeApplications</code>) which means our command requires an <code>Int</code> and optionally a <code>GuildChannel</code>.</p>
 <p>The body of the command will take a <code>Context</code> and any type parameters we pass in will also be the types of arguments to the body (computed by the <code>CommandForParsers</code> type family).</p>
 <p>We use the <code>maybe</code> function to get a default channel id- either the id of the channel provided or the id of the channel the message was invoked in, which is extracted from the <code>Context</code>. We need the id specifically even though the <code>ModifyChannel</code> request only requires something which has a <code>HasID Channel</code> instance, since <code>maybe</code> requires the output types to match up.</p>
 <p>We invoke the <code>ModifyChannel</code> request.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ModifyChannel</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="dt">HasID</span> <span class="dt">Channel</span> c</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> c</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">ChannelUpdate</span></span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">ChannelRequest</span> <span class="dt">Channel</span></span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ModifyChannel</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="dt">HasID</span> <span class="dt">Channel</span> c</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> c</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">ChannelUpdate</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">ChannelRequest</span> <span class="dt">Channel</span></span></code></pre></div>
 <p>It requires a <code>ChannelUpdate</code> as input.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ChannelUpdate</span> <span class="ot">=</span> <span class="dt">ChannelUpdate</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  {<span class="ot"> name ::</span> <span class="dt">Maybe</span> <span class="dt">Text</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> position ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> topic ::</span> <span class="dt">Maybe</span> <span class="dt">Text</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> nsfw ::</span> <span class="dt">Maybe</span> <span class="dt">Bool</span></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> rateLimitPerUser ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> bitrate ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> userLimit ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> permissionOverwrites ::</span> <span class="dt">Maybe</span> [<span class="dt">Overwrite</span>]</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> parentID ::</span> <span class="dt">Maybe</span> (<span class="dt">Snowflake</span> <span class="dt">Channel</span>)</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ChannelUpdate</span> <span class="ot">=</span> <span class="dt">ChannelUpdate</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  {<span class="ot"> name ::</span> <span class="dt">Maybe</span> <span class="dt">Text</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> position ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> topic ::</span> <span class="dt">Maybe</span> <span class="dt">Text</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> nsfw ::</span> <span class="dt">Maybe</span> <span class="dt">Bool</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> rateLimitPerUser ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> bitrate ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> userLimit ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> permissionOverwrites ::</span> <span class="dt">Maybe</span> [<span class="dt">Overwrite</span>]</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> parentID ::</span> <span class="dt">Maybe</span> (<span class="dt">Snowflake</span> <span class="dt">Channel</span>)</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
 <p>In our case, we just need the <code>rateLimitPerUser</code> field. Luckily, <code>ChannelUpdate</code> implements the <code>Default</code> typeclass, and so it provides a default value <code>def</code> in which all the fields are set to <code>Nothing</code>. We can then use <code>lens</code> to update just the field we need. We can use the <code>(?~)</code> operator, which is a convenience function that <code>set</code>s a field to <code>Just</code> the value on the right-hand side.</p>
 <p>We also react to the command invocation, just like we did in our event handler, this time using the <code>Context</code> instead of a <code>Message</code>.</p>
 <p>The parser for the command is quite intelligent, so when we come to run the command, we can pass in either a link to the channel (ala <code>#channel-name</code>) or the id of the channel.</p>
 <h2 id="creating-messages-with-ease-using-the-tell-function">Creating Messages with Ease Using the <code>tell</code> Function</h2>
 <p><code>calamity</code> has a typeclass called <code>Tellable</code>, which has a method <code>getChannel</code>.</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>getChannel </span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">BotC</span> r, <span class="dt">Member</span> (<span class="dt">Error</span> <span class="dt">RestError</span>) r) </span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> a </span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Snowflake</span> <span class="dt">Channel</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>getChannel </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> (<span class="dt">BotC</span> r, <span class="dt">Member</span> (<span class="dt">Error</span> <span class="dt">RestError</span>) r) </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> a </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Snowflake</span> <span class="dt">Channel</span>)</span></code></pre></div>
 <p>Any type which has an instance of <code>Tellable</code> can be sent a message with the <code>tell</code> function.</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>tell </span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> msg r t<span class="op">.</span> </span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">BotC</span> r, <span class="dt">ToMessage</span> msg, <span class="dt">Tellable</span> t) </span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> t </span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> msg </span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Either</span> <span class="dt">RestError</span> <span class="dt">Message</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>tell </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> msg r t<span class="op">.</span> </span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">BotC</span> r, <span class="dt">ToMessage</span> msg, <span class="dt">Tellable</span> t) </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> t </span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> msg </span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r (<span class="dt">Either</span> <span class="dt">RestError</span> <span class="dt">Message</span>)</span></code></pre></div>
 <p>It also requires the item being sent to have a <code>ToMessage</code> instance. Many types have this instance, among them the various string types, files, embeds, and mentions.</p>
 <p>Let’s create an event handler that responds to any message edit with “Hey! I saw that!”.</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageUpdateEvt</span> <span class="op">$</span> \(_oldMsg, newMsg) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>      void <span class="op">.</span> tell <span class="op">@</span><span class="dt">Text</span> newMsg <span class="op">$</span> <span class="st">&quot;Hey! I saw that!&quot;</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageUpdateEvt</span> <span class="op">$</span> \(_oldMsg, newMsg) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>      void <span class="op">.</span> tell <span class="op">@</span><span class="dt">Text</span> newMsg <span class="op">$</span> <span class="st">&quot;Hey! I saw that!&quot;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span></code></pre></div>
 <h2 id="supercharge-your-snowflakes-with-upgrade">Supercharge your <code>Snowflake</code>s with <code>upgrade</code></h2>
 <p>It can be a hassle to get a value if you only have access to its id. <code>calamity</code> provides us with the <code>Upgradable</code> typeclass, which provides the <code>upgrade</code> method.</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Upgradeable</span> a ids <span class="op">|</span> a <span class="ot">-&gt;</span> ids, ids <span class="ot">-&gt;</span> a <span class="kw">where</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  upgrade ::</span> <span class="dt">BotC</span> r <span class="ot">=&gt;</span> ids <span class="ot">-&gt;</span> <span class="dt">P.Sem</span> r (<span class="dt">Maybe</span> a)</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Upgradeable</span> a ids <span class="op">|</span> a <span class="ot">-&gt;</span> ids, ids <span class="ot">-&gt;</span> a <span class="kw">where</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  upgrade ::</span> <span class="dt">BotC</span> r <span class="ot">=&gt;</span> ids <span class="ot">-&gt;</span> <span class="dt">P.Sem</span> r (<span class="dt">Maybe</span> a)</span></code></pre></div>
 <p><code>upgrade</code> will take your id(s) and search the cache for the corresponding value, making a request if it’s not in the cache. There are several useful instances defined, all of which take one or a pair of <code>Snowflake</code>s and provide a complete value.</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a> <span class="dt">Upgradeable</span> <span class="dt">GuildChannel</span> (<span class="dt">Snowflake</span> <span class="dt">GuildChannel</span>) </span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">Upgradeable</span> <span class="dt">Member</span> (<span class="dt">Snowflake</span> <span class="dt">Guild</span>, <span class="dt">Snowflake</span> <span class="dt">Member</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a> <span class="dt">Upgradeable</span> <span class="dt">GuildChannel</span> (<span class="dt">Snowflake</span> <span class="dt">GuildChannel</span>) </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">Upgradeable</span> <span class="dt">Member</span> (<span class="dt">Snowflake</span> <span class="dt">Guild</span>, <span class="dt">Snowflake</span> <span class="dt">Member</span>)</span></code></pre></div>
 <h2 id="utilities">Utilities</h2>
 <p><code>Calamity.Utils</code> provides many useful functions: permissions calculations, message formatting, and colors for custom embeds. It’s worthwhile to check it out.</p>
 <h2 id="in-summary">In Summary</h2>
