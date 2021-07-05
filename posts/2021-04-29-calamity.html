@@ -105,7 +105,7 @@
 <p>Note that to use the field names as lenses the type must have an instance of the <code>Generic</code> typeclass. This can be done with the <code>DeriveGeneric</code> extension, which, unsurprisingly, allows the user to write <code>deriving Generic</code>. All, or at least most, of the record types defined in <code>calamity</code> have a <code>Generic</code> instance.</p>
 <h2 id="creating-the-skeleton">Creating the Skeleton</h2>
 <p>Let’s begin by building the skeleton for our project. Initialize a fresh cabal project by running <code>cabal init</code> in an empty directory. We’ll start by putting the adding the following dependencies in our <code>bot.cabal</code> file under <code>build-depends</code>.</p>
-<pre class="cabal"><code>  build-depends:
+<pre><code>  build-depends:
     , base             &gt;=4.14.1.0 &amp;&amp; &lt;5
     , calamity         &gt;=0.1.30   &amp;&amp; &lt;0.1.31
     , data-default     ^&gt;=0.7.1.1
@@ -119,9 +119,9 @@
     , text             ^&gt;=1.2.4.1
     , text-show        ^&gt;=3.9</code></pre>
 <p><code>polysemy-plugin</code> is a GHC plugin for <code>polysemy</code> which improves type inference inside the <code>Sem r</code> monad. We have to enable it by adding <code>-fplugin=Polysemy.Plugin</code> to our GHC options.</p>
-<pre class="cabal"><code>  ghc-options:      -fplugin=Polysemy.Plugin</code></pre>
+<pre><code>  ghc-options:      -fplugin=Polysemy.Plugin</code></pre>
 <p>Let’s also start with a couple of language extensions.<code>TypeApplications</code> which lets us instantiate polymorphic values with concrete types, <code>OverloadedStrings</code> to be able to write <code>Text</code> literals, and <code>OverloadedLabels</code> for use with <code>generic-lens</code>. We’ll also need <code>DataKinds</code> later.</p>
-<pre class="cabal"><code>  default-extensions:
+<pre><code>  default-extensions:
     DataKinds
     OverloadedLabels
     OverloadedStrings
