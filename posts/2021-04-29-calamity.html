@@ -106,18 +106,18 @@
 <h2 id="creating-the-skeleton">Creating the Skeleton</h2>
 <p>Let’s begin by building the skeleton for our project. Initialize a fresh cabal project by running <code>cabal init</code> in an empty directory. We’ll start by putting the adding the following dependencies in our <code>bot.cabal</code> file under <code>build-depends</code>.</p>
 <pre class="cabal"><code>  build-depends:
-    , base             ^&gt;=4.14.1.0
+    , base             &gt;=4.14.1.0 &amp;&amp; &lt;5
     , calamity         &gt;=0.1.30   &amp;&amp; &lt;0.1.31
-    , data-default
-    , data-flags
-    , di
-    , di-polysemy
-    , generic-lens
-    , lens
-    , polysemy
-    , polysemy-plugin
-    , text
-    , text-show</code></pre>
+    , data-default     ^&gt;=0.7.1.1
+    , data-flags       ^&gt;=0.0.3.4
+    , di               ^&gt;=1.3
+    , di-polysemy      ^&gt;=0.2.0.0
+    , generic-lens     ^&gt;=2.1.0.0
+    , lens             ^&gt;=5.0.1
+    , polysemy         ^&gt;=1.5.0.0
+    , polysemy-plugin  ^&gt;=0.3.0.0
+    , text             ^&gt;=1.2.4.1
+    , text-show        ^&gt;=3.9</code></pre>
 <p><code>polysemy-plugin</code> is a GHC plugin for <code>polysemy</code> which improves type inference inside the <code>Sem r</code> monad. We have to enable it by adding <code>-fplugin=Polysemy.Plugin</code> to our GHC options.</p>
 <pre class="cabal"><code>  ghc-options:      -fplugin=Polysemy.Plugin</code></pre>
 <p>Let’s also start with a couple of language extensions.<code>TypeApplications</code> which lets us instantiate polymorphic values with concrete types, <code>OverloadedStrings</code> to be able to write <code>Text</code> literals, and <code>OverloadedLabels</code> for use with <code>generic-lens</code>. We’ll also need <code>DataKinds</code> later.</p>
