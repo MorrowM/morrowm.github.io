@@ -156,7 +156,7 @@
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> useConstantPrefix <span class="st">&quot;!&quot;</span></span>
 <span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runBotIO (<span class="dt">BotToken</span> <span class="st">&quot;&lt;token&gt;&quot;</span>) defaultIntents</span>
 <span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Connected successfully.&quot;</span></span></code></pre></div>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span></code></pre></div>
 <p>Let’s break this down bit by bit.</p>
 <p><code>Di.new</code> has the type</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">new ::</span> (<span class="dt">Di</span> <span class="dt">Level</span> <span class="dt">Path</span> <span class="dt">Message</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> a) <span class="ot">-&gt;</span> <span class="dt">IO</span> a</span></code></pre></div>
@@ -215,7 +215,7 @@
 <p>Let’s create an event handler that will do something wholesome, like react with 😄 on any message containing the string “Haskell”.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    debug <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Connected successfully.&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    debug <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageCreateEvt</span> <span class="op">$</span> \msg <span class="ot">-&gt;</span> <span class="kw">do</span></span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>      when (<span class="st">&quot;Haskell&quot;</span> <span class="ot">`T.isInfixOf`</span> (msg <span class="op">^.</span> <span class="op">#</span>content)) <span class="op">$</span></span>
