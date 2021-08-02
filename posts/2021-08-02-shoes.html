@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tying Shoes with GADTs - MorrowM</title>
+    <link rel="stylesheet" href="../css/default.css" />
+    <link rel="stylesheet" href="../css/highlightjs.css">
+    <script src="../js/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <a href="../">MorrowM</a>
+        </div>
+        <nav>
+            <a href="../">Home</a>
+            <a href="../archive.html">Archive</a>
+        </nav>
+    </header>
+
+    <main role="main">
+        <h1>Tying Shoes with GADTs</h1>
+        <article>
+    <section class="header">
+        Posted on August  2, 2021
+        
+    </section>
+    <section>
+        <p>How do you put on your shoes?</p>
+<p>Do you put them both on and then tie them both? In what order? Do you put on one shoe, tie it and then do the other one? That might be a bit odd, but it’s acceptable. Anyone who ties either of their shoes <em>before</em> putting them on is a no-go, though. And since my Haskell file is my world, and GHC is my enforcer, let’s make this state of affairs <em>unrepresentable</em>.</p>
+<h2 id="a-brief-introduction-to-gadts">A brief introduction to GADTs</h2>
+<p><code>Maybe</code> is an algebraic data type (ADT for short) that we all know and love. It’s defined as:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Maybe</span> a <span class="ot">=</span> <span class="dt">Nothing</span> <span class="op">|</span> <span class="dt">Just</span> a</span></code></pre></div>
+<p>We can ask GHCi the types of the data constructors:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t <span class="dt">Nothing</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Nothing</span><span class="ot"> ::</span> <span class="dt">Maybe</span> a</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t <span class="dt">Just</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span></code></pre></div>
+<p>Cool! This even defines what <code>Maybe</code> is. It would also be pretty cool if we could define <code>Maybe</code> that way.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Maybe</span> a <span class="kw">where</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Nothing</span><span class="ot"> ::</span> <span class="dt">Maybe</span> a</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Just</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span></code></pre></div>
+<p>Of course, the return types of these constructors have to be the same. But what if things didn’t have to be that way?</p>
+<p>Consider the following data type:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> a <span class="kw">where</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">ABool</span><span class="ot"> ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="dt">Bool</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">AnInt</span><span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="dt">Int</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">If</span><span class="ot">    ::</span> <span class="dt">Expr</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> a <span class="ot">-&gt;</span> <span class="dt">Expr</span> a <span class="ot">-&gt;</span> <span class="dt">Expr</span> a</span></code></pre></div>
+<p>If we could make such a data type, then an expression like <code>If (ABool True) (AnInt 5) (AnInt 7)</code> would be fine, while an expression <code>If  (AnInt 5) (AnInt 5) (AnInt 7)</code> wouldn’t type-check, since <code>If</code> expects an <code>Expr Bool</code> as its first argument. Similarly, the following expression would also not type-check: <code>If (ABool False) (AnInt 6) (ABool 5)</code>. <code>If</code> expects its second and third arguments to have the same type, which is not true in this case.</p>
+<p>This sort of datatype can indeed be defined if you enable the GHC <code>GADTs</code> language extension, a GADT being a generalized ADT. If we didn’t index our expressions by their types like this, we wouldn’t have been able to prevent the programmer from constructing these invalid expressions.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">ABool</span> <span class="dt">Bool</span> <span class="op">|</span> <span class="dt">AnInt</span> <span class="dt">Int</span> <span class="op">|</span> <span class="dt">If</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="dt">Expr</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>thisTypeChecks <span class="ot">=</span> <span class="dt">If</span> (<span class="dt">AnInt</span> <span class="dv">8</span>) (<span class="dt">ABool</span> <span class="dt">True</span>) (<span class="dt">AnInt</span> <span class="dv">4</span>)</span></code></pre></div>
+<p>We can use a similar principle to construct valid shoe-tying methods.</p>
+<h2 id="using-gadts-to-make-illegal-states-unrepresentable">Using GADTs to make illegal states unrepresentable</h2>
+<p>First, we need to define what states a shoe can be in.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ShoeState</span> <span class="ot">=</span> <span class="dt">Off</span> <span class="op">|</span> <span class="dt">Untied</span> <span class="op">|</span> <span class="dt">On</span></span></code></pre></div>
+<p>So a shoe is either completely off, on but untied, or on.</p>
+<p>Let’s define what operations we can perform on our pair of shoes, by using a GADT.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Shoes</span> l r <span class="kw">where</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Both shoes can be off:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">OffLR</span><span class="ot"> ::</span> <span class="dt">Shoes</span> <span class="dt">Off</span> <span class="dt">Off</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- If a shoe is off, we can put it on:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">PutOnL</span><span class="ot"> ::</span> <span class="dt">Shoes</span> <span class="dt">Off</span> r <span class="ot">-&gt;</span> <span class="dt">Shoes</span> <span class="dt">Untied</span> r </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">PutOnR</span><span class="ot"> ::</span> <span class="dt">Shoes</span> l <span class="dt">Off</span> <span class="ot">-&gt;</span> <span class="dt">Shoes</span> l <span class="dt">Untied</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- If a shoe is on, but untied, we can tie it:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">TieL</span><span class="ot">   ::</span> <span class="dt">Shoes</span> <span class="dt">Untied</span> r <span class="ot">-&gt;</span> <span class="dt">Shoes</span> <span class="dt">On</span> r </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">TieR</span><span class="ot">   ::</span> <span class="dt">Shoes</span> l <span class="dt">Untied</span> <span class="ot">-&gt;</span> <span class="dt">Shoes</span> l <span class="dt">On</span></span></code></pre></div>
+<p>This is pretty cool. We’re defining a set of valid state transitions, and enforcing it in the type system.</p>
+<p>One other thing to note here is that we’re using the <code>DataKinds</code> extension to allow us to use these runtime values (<code>Off</code>, <code>Untied</code>, and <code>On</code>) in our types. We could have defined empty dummy types with no constructors (e.g <code>data Off</code>), but using <code>DataKinds</code> will give us tighter control over the types and give better error messages when we mess up.</p>
+<p>We can also define a valid shoe tying method to be a function from <code>Off</code> shoes to <code>On</code> shoes.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Method</span> <span class="ot">=</span> <span class="dt">Shoes</span> <span class="dt">Off</span> <span class="dt">Off</span> <span class="ot">-&gt;</span> <span class="dt">Shoes</span> <span class="dt">On</span> <span class="dt">On</span></span></code></pre></div>
+<p>It almost reads like English, nice.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> One last thing is we’ll define a flipped composition operator so that we can compose our constructors from left to right, as opposed to <code>(.)</code> which composes right to left.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">&gt;&gt;&gt;</span>) <span class="ot">=</span> <span class="fu">flip</span> (<span class="op">.</span>)</span></code></pre></div>
+<p>Let’s define our first method.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rllr ::</span> <span class="dt">Method</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>rllr <span class="ot">=</span> <span class="dt">PutOnR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieR</span></span></code></pre></div>
+<p>It type-checks, great! Let’s see what happens when we try to tie our shoes before we put them on.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">don't ::</span> <span class="dt">Method</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>don't <span class="ot">=</span> <span class="dt">TieR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnL</span></span></code></pre></div>
+<p>We get a bunch of type errors, which is exactly what we wanted.</p>
+<pre><code>Shoe.hs: error:
+    • Couldn't match type ‘'Off’ with ‘'On’
+      Expected type: Shoes 'On 'On -&gt; Shoes 'On 'Untied
+        Actual type: Shoes 'On 'Off -&gt; Shoes 'On 'Untied
+   |
+   | don't = TieR &gt;&gt;&gt; TieL &gt;&gt;&gt; PutOnR &gt;&gt;&gt; PutOnL
+   |                           ^^^^^^</code></pre>
+<p>One last thing we can do is since these are runtime values, we could print them as user-friendly instructions.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">describe ::</span> <span class="dt">Method</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>describe method <span class="ot">=</span> go (method <span class="dt">OffLR</span>) <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Done!&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    go ::</span> <span class="dt">Shoes</span> l r <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    go <span class="dt">OffLR</span> <span class="ot">=</span> <span class="fu">putStrLn</span> <span class="st">&quot;Alright.&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">PutOnL</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Put on the left shoe.&quot;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">PutOnR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Put on the right shoe.&quot;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieL</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the left shoe.&quot;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the right shoe.&quot;</span></span></code></pre></div>
+<p>Note that the type signature on is required, the type-checker can’t infer it. This is part of the price we pay with GADTs, expressions don’t always have a principal<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> type.</p>
+<p>We can run it, and finally, get some instructions on how to put on and tie our shoes.</p>
+<pre><code>λ&gt; describe rllr
+Alright.
+Put on the right shoe.
+Put on the left shoe.
+Tie the left shoe.
+Tie the right shoe.
+Done!</code></pre>
+<p><a href="https://gist.github.com/MorrowM/6cd60264dd2efdd5633522c1a7242dde">Link to the complete code</a></p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>We can, in fact, do this with the GHC language extension <code>GADTSyntax</code>, which will be on by default starting in GHC 9.2. Of course, we’re getting ahead of ourselves.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>In fact, we won’t even need <code>OffLR</code> to define a <code>Method</code>. We will need it if we want to pattern match on them though, which we’ll do later when writing the <code>describe</code> function.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3" role="doc-endnote"><p>Unambiguous and most general. A simple example is with our <code>Expr</code> type from earlier:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>foo (<span class="dt">ABool</span> b) <span class="ot">=</span> b</span></code></pre></div>
+<p>Both <code>foo :: Expr a -&gt; a</code> and <code>foo :: Expr a -&gt; Bool</code> are valid types to give <code>foo</code> here, neither being more general than the other.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+    </section>
+</article>
+
+    </main>
+
+    <footer>
+        Site proudly generated by
+        <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+    </footer>
+</body>
+
+</html>
