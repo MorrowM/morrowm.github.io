@@ -100,7 +100,7 @@
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">PutOnR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Put on the right shoe.&quot;</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieL</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the left shoe.&quot;</span></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the right shoe.&quot;</span></span></code></pre></div>
-<p>Note that the type signature on is required, the type-checker can’t infer it. This is part of the price we pay with GADTs, expressions don’t always have a principal<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> type.</p>
+<p>Note that the type signature on <code>go</code> is required, the type-checker can’t infer it. This is part of the price we pay with GADTs, expressions don’t always have a principal<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> type.</p>
 <p>We can run it, and finally, get some instructions on how to put on and tie our shoes.</p>
 <pre><code>λ&gt; describe rllr
 Alright.
