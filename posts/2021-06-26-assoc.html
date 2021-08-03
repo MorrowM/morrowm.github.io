@@ -7,15 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Associated Types In Two Different Ways - MorrowM</title>
     <link rel="stylesheet" href="../css/default.css" />
-    <link rel="stylesheet" href="../css/highlightjs.css">
+    <link rel="stylesheet" href="../css/highlightjs/atom-one-dark.min.css">
     <script src="../js/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
     <header>
         <div class="logo">
-            <a href="../">MorrowM</a>
+            <a class="no-hover" href="../">MorrowM</a>
         </div>
         <nav>
             <a href="../">Home</a>
@@ -24,10 +25,10 @@
     </header>
 
     <main role="main">
-        <h1>Associated Types In Two Different Ways</h1>
+        <h1 class="title">Associated Types In Two Different Ways</h1>
         <article>
     <section class="header">
-        Posted on June 26, 2021
+        June 26, 2021
         
     </section>
     <section>
@@ -68,7 +69,7 @@
 <div class="sourceCode" id="cb4"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> <span class="dt">Indexed</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
 <p>We’d get a type error:</p>
-<pre><code>• Couldn't match expected type ‘Idx f’ with actual type ‘Int’</code></pre>
+<pre class="plaintext"><code>• Couldn't match expected type ‘Idx f’ with actual type ‘Int’</code></pre>
 <p>Fair enough, this function obviously won’t work for just any indexable container, only ones that are indexed by <code>Int</code>s. We can resolve this by adding a constraint:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> (<span class="dt">Indexed</span> f, <span class="dt">Idx</span> f <span class="op">~</span> <span class="dt">Int</span>) <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
@@ -93,7 +94,7 @@
 <div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">c ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>c <span class="ot">=</span> <span class="st">&quot;hello&quot;</span> <span class="op">!?</span> <span class="dv">3</span></span></code></pre></div>
 <p>Oh no! When we compile, we get errors:</p>
-<pre><code>• Ambiguous type variable ‘idx0’ arising from a use of ‘!?’
+<pre class="plaintext"><code>• Ambiguous type variable ‘idx0’ arising from a use of ‘!?’
       prevents the constraint ‘(Indexed [] idx0)’ from being solved.
       Probable fix: use a type annotation to specify what ‘idx0’ should be.
 
@@ -125,7 +126,6 @@
 </section>
     </section>
 </article>
-
     </main>
 
     <footer>

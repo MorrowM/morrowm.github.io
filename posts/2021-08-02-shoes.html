@@ -7,15 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tying Shoes with GADTs - MorrowM</title>
     <link rel="stylesheet" href="../css/default.css" />
-    <link rel="stylesheet" href="../css/highlightjs.css">
+    <link rel="stylesheet" href="../css/highlightjs/atom-one-dark.min.css">
     <script src="../js/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
     <header>
         <div class="logo">
-            <a href="../">MorrowM</a>
+            <a class="no-hover" href="../">MorrowM</a>
         </div>
         <nav>
             <a href="../">Home</a>
@@ -24,10 +25,10 @@
     </header>
 
     <main role="main">
-        <h1>Tying Shoes with GADTs</h1>
+        <h1 class="title">Tying Shoes with GADTs</h1>
         <article>
     <section class="header">
-        Posted on August  2, 2021
+        August  2, 2021
         
     </section>
     <section>
@@ -83,7 +84,7 @@
 <div class="sourceCode" id="cb11"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">don't ::</span> <span class="dt">Method</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>don't <span class="ot">=</span> <span class="dt">TieR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnL</span></span></code></pre></div>
 <p>We get a bunch of type errors, which is exactly what we wanted.</p>
-<pre><code>Shoe.hs: error:
+<pre class="plaintext"><code>Shoe.hs: error:
     • Couldn't match type ‘'Off’ with ‘'On’
       Expected type: Shoes 'On 'On -&gt; Shoes 'On 'Untied
         Actual type: Shoes 'On 'Off -&gt; Shoes 'On 'Untied
@@ -102,7 +103,7 @@
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the right shoe.&quot;</span></span></code></pre></div>
 <p>Note that the type signature on <code>go</code> is required, the type-checker can’t infer it. This is part of the price we pay with GADTs, expressions don’t always have a principal<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> type.</p>
 <p>We can run it, and finally, get some instructions on how to put on and tie our shoes.</p>
-<pre><code>λ&gt; describe rllr
+<pre class="plaintext"><code>λ&gt; describe rllr
 Alright.
 Put on the right shoe.
 Put on the left shoe.
@@ -122,7 +123,6 @@ Done!</code></pre>
 </section>
     </section>
 </article>
-
     </main>
 
     <footer>

@@ -7,15 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Home - MorrowM</title>
     <link rel="stylesheet" href="./css/default.css" />
-    <link rel="stylesheet" href="./css/highlightjs.css">
+    <link rel="stylesheet" href="./css/highlightjs/atom-one-dark.min.css">
     <script src="./js/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
     <header>
         <div class="logo">
-            <a href="./">MorrowM</a>
+            <a class="no-hover" href="./">MorrowM</a>
         </div>
         <nav>
             <a href="./">Home</a>
@@ -24,12 +25,25 @@
     </header>
 
     <main role="main">
-        <h1>Home</h1>
-        <h2>Welcome</h2>
+        <h1 class="title">Home</h1>
+        <style>
+  .title {
+    display: none;
+  }
+</style>
+<h2 id="welcome-message">Welcome.</h2>
 
-<p>Welcome to my blog, I'm a hobbyist programmer who likes to write Haskell sometimes.</p>
+<p>I'm a hobbyist programmer who likes to write Haskell sometimes.</p>
 
-<a href="https://github.com/MorrowM">GitHub</a>
+<div class="socials">
+  <a href="https://github.com/MorrowM" class="no-hover">
+    <img class="social-logo" src="./images/github-logo.png" />
+  </a>
+
+  <a href="https://reddit.com/user/MorrowM_" class="no-hover">
+    <img class="social-logo reddit-logo" src="./images/reddit-logo.png" />
+  </a>
+</div>
 
 <h2>Posts</h2>
 <ul>
