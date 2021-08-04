@@ -1,32 +1,228 @@
-<!doctype html>
-<html lang="en">
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>MorrowM</title>
+        <link>https://morrowm.github.io/</link>
+        <description><![CDATA[MorrowM's personal blog.]]></description>
+        <atom:link href="https://morrowm.github.io//rss.xml" rel="self"
+                   type="application/rss+xml" />
+        <lastBuildDate>Mon, 02 Aug 2021 00:00:00 UT</lastBuildDate>
+        <item>
+    <title>Tying Shoes with GADTs</title>
+    <link>https://morrowm.github.io//posts/2021-08-02-shoes.html</link>
+    <description><![CDATA[<article>
+    <section class="header">
+        August  2, 2021
+        
+    </section>
+    <section>
+        <p>How do you put on your shoes?</p>
+<p>Do you put them both on and then tie them both? In what order? Do you put on one shoe, tie it and then do the other one? That might be a bit odd, but it’s acceptable. Anyone who ties either of their shoes <em>before</em> putting them on is a no-go, though. And since my Haskell file is my world, and GHC is my enforcer, let’s make this state of affairs <em>unrepresentable</em>.</p>
+<h2 id="a-brief-introduction-to-gadts">A brief introduction to GADTs</h2>
+<p><code>Maybe</code> is an algebraic data type (ADT for short) that we all know and love. It’s defined as:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Maybe</span> a <span class="ot">=</span> <span class="dt">Nothing</span> <span class="op">|</span> <span class="dt">Just</span> a</span></code></pre></div>
+<p>We can ask GHCi the types of the data constructors:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t <span class="dt">Nothing</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Nothing</span><span class="ot"> ::</span> <span class="dt">Maybe</span> a</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t <span class="dt">Just</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span></code></pre></div>
+<p>Cool! This even defines what <code>Maybe</code> is. It would also be pretty cool if we could define <code>Maybe</code> that way.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Maybe</span> a <span class="kw">where</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Nothing</span><span class="ot"> ::</span> <span class="dt">Maybe</span> a</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Just</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span></code></pre></div>
+<p>Of course, the return types of these constructors have to be the same. But what if things didn’t have to be that way?</p>
+<p>Consider the following data type:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> a <span class="kw">where</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">ABool</span><span class="ot"> ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="dt">Bool</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">AnInt</span><span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="dt">Int</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">If</span><span class="ot">    ::</span> <span class="dt">Expr</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> a <span class="ot">-&gt;</span> <span class="dt">Expr</span> a <span class="ot">-&gt;</span> <span class="dt">Expr</span> a</span></code></pre></div>
+<p>If we could make such a data type, then an expression like <code>If (ABool True) (AnInt 5) (AnInt 7)</code> would be fine, while an expression <code>If  (AnInt 5) (AnInt 5) (AnInt 7)</code> wouldn’t type-check, since <code>If</code> expects an <code>Expr Bool</code> as its first argument. Similarly, the following expression would also not type-check: <code>If (ABool False) (AnInt 6) (ABool 5)</code>. <code>If</code> expects its second and third arguments to have the same type, which is not true in this case.</p>
+<p>This sort of data type can indeed be defined if you enable the GHC <code>GADTs</code> language extension, a GADT being a generalized ADT. If we didn’t index our expressions by their types like this, we wouldn’t have been able to prevent the programmer from constructing these invalid expressions.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">ABool</span> <span class="dt">Bool</span> <span class="op">|</span> <span class="dt">AnInt</span> <span class="dt">Int</span> <span class="op">|</span> <span class="dt">If</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="dt">Expr</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>thisTypeChecks <span class="ot">=</span> <span class="dt">If</span> (<span class="dt">AnInt</span> <span class="dv">8</span>) (<span class="dt">ABool</span> <span class="dt">True</span>) (<span class="dt">AnInt</span> <span class="dv">4</span>)</span></code></pre></div>
+<p>We can use a similar principle to construct valid shoe-tying methods.</p>
+<h2 id="using-gadts-to-make-illegal-states-unrepresentable">Using GADTs to make illegal states unrepresentable</h2>
+<p>First, we need to define what states a shoe can be in.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ShoeState</span> <span class="ot">=</span> <span class="dt">Off</span> <span class="op">|</span> <span class="dt">Untied</span> <span class="op">|</span> <span class="dt">On</span></span></code></pre></div>
+<p>So a shoe is either completely off, on but untied, or on.</p>
+<p>Let’s define what operations we can perform on our pair of shoes, by using a GADT.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Shoes</span> l r <span class="kw">where</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Both shoes can be off:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">OffLR</span><span class="ot"> ::</span> <span class="dt">Shoes</span> <span class="dt">Off</span> <span class="dt">Off</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- If a shoe is off, we can put it on:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">PutOnL</span><span class="ot"> ::</span> <span class="dt">Shoes</span> <span class="dt">Off</span> r <span class="ot">-&gt;</span> <span class="dt">Shoes</span> <span class="dt">Untied</span> r </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">PutOnR</span><span class="ot"> ::</span> <span class="dt">Shoes</span> l <span class="dt">Off</span> <span class="ot">-&gt;</span> <span class="dt">Shoes</span> l <span class="dt">Untied</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- If a shoe is on, but untied, we can tie it:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">TieL</span><span class="ot">   ::</span> <span class="dt">Shoes</span> <span class="dt">Untied</span> r <span class="ot">-&gt;</span> <span class="dt">Shoes</span> <span class="dt">On</span> r </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">TieR</span><span class="ot">   ::</span> <span class="dt">Shoes</span> l <span class="dt">Untied</span> <span class="ot">-&gt;</span> <span class="dt">Shoes</span> l <span class="dt">On</span></span></code></pre></div>
+<p>This is pretty cool. We’re defining a set of valid state transitions, and enforcing it in the type system.</p>
+<p>One other thing to note here is that we’re using the <code>DataKinds</code> extension to allow us to use these runtime values (<code>Off</code>, <code>Untied</code>, and <code>On</code>) in our types. We could have defined empty dummy types with no constructors (e.g <code>data Off</code>), but using <code>DataKinds</code> will give us tighter control over the types and give better error messages when we mess up.</p>
+<p>We can also define a valid shoe tying method to be a function from <code>Off</code> shoes to <code>On</code> shoes.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Method</span> <span class="ot">=</span> <span class="dt">Shoes</span> <span class="dt">Off</span> <span class="dt">Off</span> <span class="ot">-&gt;</span> <span class="dt">Shoes</span> <span class="dt">On</span> <span class="dt">On</span></span></code></pre></div>
+<p>It almost reads like English, nice.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> One last thing is we’ll define a flipped composition operator so that we can compose our constructors from left to right, as opposed to <code>(.)</code> which composes right to left.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">&gt;&gt;&gt;</span>) <span class="ot">=</span> <span class="fu">flip</span> (<span class="op">.</span>)</span></code></pre></div>
+<p>Let’s define our first method.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">rllr ::</span> <span class="dt">Method</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>rllr <span class="ot">=</span> <span class="dt">PutOnR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieR</span></span></code></pre></div>
+<p>It type-checks, great! Let’s see what happens when we try to tie our shoes before we put them on.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">don&#39;t ::</span> <span class="dt">Method</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>don&#39;t <span class="ot">=</span> <span class="dt">TieR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">TieL</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnR</span> <span class="op">&gt;&gt;&gt;</span> <span class="dt">PutOnL</span></span></code></pre></div>
+<p>We get a bunch of type errors, which is exactly what we wanted.</p>
+<pre class="plaintext"><code>Shoe.hs: error:
+    • Couldn&#39;t match type ‘&#39;Off’ with ‘&#39;On’
+      Expected type: Shoes &#39;On &#39;On -&gt; Shoes &#39;On &#39;Untied
+        Actual type: Shoes &#39;On &#39;Off -&gt; Shoes &#39;On &#39;Untied
+   |
+   | don&#39;t = TieR &gt;&gt;&gt; TieL &gt;&gt;&gt; PutOnR &gt;&gt;&gt; PutOnL
+   |                           ^^^^^^</code></pre>
+<p>One last thing we can do is since these are runtime values, we could print them as user-friendly instructions.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">describe ::</span> <span class="dt">Method</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>describe method <span class="ot">=</span> go (method <span class="dt">OffLR</span>) <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Done!&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    go ::</span> <span class="dt">Shoes</span> l r <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    go <span class="dt">OffLR</span> <span class="ot">=</span> <span class="fu">putStrLn</span> <span class="st">&quot;Alright.&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">PutOnL</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Put on the left shoe.&quot;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">PutOnR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Put on the right shoe.&quot;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieL</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the left shoe.&quot;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">TieR</span> x) <span class="ot">=</span> go x <span class="op">*&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Tie the right shoe.&quot;</span></span></code></pre></div>
+<p>Note that the type signature on <code>go</code> is required, the type-checker can’t infer it. This is part of the price we pay with GADTs, expressions don’t always have a principal<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> type.</p>
+<p>We can run it, and finally, get some instructions on how to put on and tie our shoes.</p>
+<pre class="plaintext"><code>λ&gt; describe rllr
+Alright.
+Put on the right shoe.
+Put on the left shoe.
+Tie the left shoe.
+Tie the right shoe.
+Done!</code></pre>
+<p><a href="https://gist.github.com/MorrowM/6cd60264dd2efdd5633522c1a7242dde">Link to the complete code</a></p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>We can, in fact, do this with the GHC language extension <code>GADTSyntax</code>, which will be on by default starting in GHC 9.2. Of course, we’re getting ahead of ourselves.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>In fact, we won’t even need <code>OffLR</code> to define a <code>Method</code>. We will need it if we want to pattern match on them though, which we’ll do later when writing the <code>describe</code> function.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3" role="doc-endnote"><p>Unambiguous and most general. A simple example is with our <code>Expr</code> type from earlier:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>foo (<span class="dt">ABool</span> b) <span class="ot">=</span> b</span></code></pre></div>
+<p>Both <code>foo :: Expr a -&gt; a</code> and <code>foo :: Expr a -&gt; Bool</code> are valid types to give <code>foo</code> here, neither being more general than the other.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+    </section>
+</article>]]></description>
+    <pubDate>Mon, 02 Aug 2021 00:00:00 UT</pubDate>
+    <guid>https://morrowm.github.io//posts/2021-08-02-shoes.html</guid>
+    <dc:creator>MorrowM</dc:creator>
+</item>
+<item>
+    <title>Associated Types In Two Different Ways</title>
+    <link>https://morrowm.github.io//posts/2021-06-26-assoc.html</link>
+    <description><![CDATA[<article>
+    <section class="header">
+        June 26, 2021
+        
+    </section>
+    <section>
+        <p>Suppose you wanted to write a type class for indexable containers. It might look something like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span></code></pre></div>
+<p>We could then go on to write instances for our favorite types:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [] <span class="op">!?</span> _ <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  (x<span class="op">:</span>xs) <span class="op">!?</span> n</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> n <span class="op">==</span> <span class="dv">0</span>    <span class="ot">=</span> <span class="dt">Just</span> x</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> n <span class="op">&gt;</span> <span class="dv">0</span>     <span class="ot">=</span> xs <span class="op">!?</span> (n <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> <span class="dt">Vector</span> <span class="kw">where</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">V.!?</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> <span class="dt">IntMap</span> <span class="kw">where</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">IntMap.!?</span>)</span></code></pre></div>
+<p>But now, we decide that we also want to be able to index <code>Map</code>s as well. The issue is that we’ve already hard-coded the index type to be <code>Int</code>.</p>
+<h2 id="associated-type-families">Associated Type Families</h2>
+<p>One way to allow arbitrary index types is to use an associated type family:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeFamilies #-}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f <span class="kw">where</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Idx</span> f</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> <span class="dt">Idx</span> f <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="kw">where</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Idx</span> [] <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ...</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> k <span class="ot">=&gt;</span> <span class="dt">Indexed</span> (<span class="dt">Map</span> k) <span class="kw">where</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> <span class="dt">Idx</span> (<span class="dt">Map</span> k) <span class="ot">=</span> k</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">Map.!?</span>)</span></code></pre></div>
+<p>Say we want to write the following function:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> <span class="dt">Indexed</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
+<p>We’d get a type error:</p>
+<pre class="plaintext"><code>• Couldn&#39;t match expected type ‘Idx f’ with actual type ‘Int’</code></pre>
+<p>Fair enough, this function obviously won’t work for just any indexable container, only ones that are indexed by <code>Int</code>s. We can resolve this by adding a constraint:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> (<span class="dt">Indexed</span> f, <span class="dt">Idx</span> f <span class="op">~</span> <span class="dt">Int</span>) <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
+<p>For those unfamiliar, <code>~</code> here is an operator provided by GHC that yields a constraint that the type on the left equals the type on the right. In this case, by constraining <code>Idx f</code> to equal <code>Int</code>, GHC can now add that to its list of known facts, so we don’t get that type error anymore. <code>~</code> is enabled by both the <code>TypeFamilies</code> extension and the <code>GADTs</code> extension.</p>
+<h2 id="multi-parameter-type-classes">Multi-parameter Type Classes</h2>
+<p>Another way we can encode this information, the type of the index, would be to add an additional parameter to the type class.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE MultiParamTypeClasses #-}</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f idx <span class="kw">where</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> idx <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="dt">Int</span> <span class="kw">where</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ...</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> (<span class="dt">Map</span> k) k <span class="kw">where</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  (<span class="op">!?</span>) <span class="ot">=</span> (<span class="op">Map.!?</span>)</span></code></pre></div>
+<p>We can then write <code>firstElem</code> in a straightforward manner.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">firstElem ::</span> <span class="dt">Indexed</span> f <span class="dt">Int</span> <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>firstElem f <span class="ot">=</span> f <span class="op">!?</span> (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Int</span>)</span></code></pre></div>
+<p>Yes! This type checks just fine.</p>
+<p>All is good, right? Well, let’s try and use this instance.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">c ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>c <span class="ot">=</span> <span class="st">&quot;hello&quot;</span> <span class="op">!?</span> <span class="dv">3</span></span></code></pre></div>
+<p>Oh no! When we compile, we get errors:</p>
+<pre class="plaintext"><code>• Ambiguous type variable ‘idx0’ arising from a use of ‘!?’
+      prevents the constraint ‘(Indexed [] idx0)’ from being solved.
+      Probable fix: use a type annotation to specify what ‘idx0’ should be.
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Write your own Discord bot in Haskell with calamity - MorrowM</title>
-    <link rel="stylesheet" href="../css/default.css" />
-    <link rel="stylesheet" href="../css/highlightjs/atom-one-dark.min.css">
-    <script src="../js/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-
-<body>
-    <header>
-        <div class="logo">
-            <a class="no-hover" href="../">MorrowM</a>
-        </div>
-        <nav>
-            <a href="../">Home</a>
-            <a href="../archive.html">Archive</a>
-        </nav>
-    </header>
-
-    <main role="main">
-        <h1 class="title">Write your own Discord bot in Haskell with calamity</h1>
-        <article>
+• Ambiguous type variable ‘idx0’ arising from the literal ‘3’
+      prevents the constraint ‘(Num idx0)’ from being solved.
+      Probable fix: use a type annotation to specify what ‘idx0’ should be.</code></pre>
+<p>Now sure, if we add a type signature to the literal <code>3</code>, then the error goes away, but this is really not ideal. Ideally, we’d like the compiler to infer right away that since we’re indexing a list, the index type <em>must</em> be <code>Int</code>. This is indeed what happens when we use an associated type family, but not here.</p>
+<h3 id="functional-dependencies">Functional Dependencies</h3>
+<p>The core issue here is that there’s nothing stopping someone from writing their own instance:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Indexed</span> [] <span class="dt">Integer</span> <span class="kw">where</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span></code></pre></div>
+<p>This is a completely valid instance that doesn’t overlap with our own. Therefore, GHC can’t infer that the literal <code>0</code> must be an <code>Int</code>, since it can just as well be an <code>Integer</code>, or any number of types, really.</p>
+<p>The solution is to add a functional dependency.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE FunctionalDependencies #-}</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Indexed</span> f idx <span class="op">|</span> f <span class="ot">-&gt;</span> idx <span class="kw">where</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  (!?) ::</span> f a <span class="ot">-&gt;</span> idx <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ot">x ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="st">&quot;hello&quot;</span> <span class="op">!?</span> <span class="dv">3</span></span></code></pre></div>
+<p>What this syntax means is that the type variable <code>f</code> must <em>uniquely</em> determine the type variable <code>idx</code>. This has two effects. One, if we have an instance <code>instance Indexed [] Int</code>, then we can’t go ahead and write another instance <code>instance Indexed [] Integer</code>, since then <code>f</code> doesn’t uniquely determine <code>idx</code>. Two, GHC can now infer the type of <code>idx</code> just from knowing what <code>f</code> is, so our program will now type check. GHC will see we’re indexing a list, and therefore the index type <em>must</em> be <code>Int</code>, so the type of the literal <code>3</code> here must be <code>Int</code>.</p>
+<p>Looking back, when we used a type family, we were doing the same thing, only implicitly. When we write <code>Idx f</code> it’s implicit that <code>Idx</code> gives back a single type when applied. In other words, <code>f</code> <em>uniquely</em> determines <code>Idx f</code>.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p>Both of these methods give very similar results, but it’s good to be familiar with both of them, as they can have different ergonomics. It’s also good to be able to recognize both of these patterns in other libraries, as they’re both used throughout Hackage.</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>Interestingly, we can go in the other direction with the <a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/exts/type_families.html#extension-TypeFamilyDependencies"><code>TypeFamilyDependencies</code></a> extension.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+    </section>
+</article>]]></description>
+    <pubDate>Sat, 26 Jun 2021 00:00:00 UT</pubDate>
+    <guid>https://morrowm.github.io//posts/2021-06-26-assoc.html</guid>
+    <dc:creator>MorrowM</dc:creator>
+</item>
+<item>
+    <title>Write your own Discord bot in Haskell with calamity</title>
+    <link>https://morrowm.github.io//posts/2021-04-29-calamity.html</link>
+    <description><![CDATA[<article>
     <section class="header">
         April 29, 2021
         
@@ -84,23 +280,23 @@
 <h3 id="lens"><code>lens</code></h3>
 <p>For a full understanding of how lens works, there are better resources such as the excellent <a href="https://artyom.me/lens-over-tea-1">lens over tea</a>. This will just be a quick overview of the basic usage of lenses for those who aren’t familiar with them.</p>
 <p>A lens can be thought of as a value that focuses on some part of a larger structure, such as a field in a record. For example, <code>lens</code> provides the <code>_1</code> lens which focuses on the first element of a tuple. We can use a lens to extract part of a value with the <code>view</code> function or its operator counterpart, <code>(^.)</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> view (<span class="ch">'a'</span>, <span class="dv">5</span>) _1</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ch">'a'</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="ch">'a'</span>, <span class="dv">5</span>) <span class="op">^.</span> _2</span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> view (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>) _1</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;a&#39;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>) <span class="op">^.</span> _2</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dv">5</span></span></code></pre></div>
 <p>We can replace part of a structure with the <code>set</code> function or its operator counterpart, <code>(.~)</code>. We can use the flipped application operator <code>(&amp;) = flip ($)</code> alongside this operator.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> set _1 <span class="st">&quot;hello&quot;</span> (<span class="ch">'a'</span>, <span class="dv">5</span>)</span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> set _1 <span class="st">&quot;hello&quot;</span> (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>(<span class="st">&quot;hello&quot;</span>, <span class="dv">5</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="ch">'a'</span>, <span class="dv">5</span>) <span class="op">&amp;</span> _2 <span class="op">.~</span> <span class="dt">False</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>(<span class="ch">'a'</span>, <span class="dt">False</span>)</span></code></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>) <span class="op">&amp;</span> _2 <span class="op">.~</span> <span class="dt">False</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>(<span class="ch">&#39;a&#39;</span>, <span class="dt">False</span>)</span></code></pre></div>
 <p>And finally, we have <code>over</code> and its operator <code>%~</code> which work much the same way as <code>set</code>, but takes a function to modify the structure with rather than a set value.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> over _1 <span class="fu">succ</span> (<span class="ch">'a'</span>, <span class="dv">5</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(<span class="ch">'b'</span>, <span class="dv">5</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="ch">'a'</span>, <span class="dv">5</span>) <span class="op">&amp;</span> _2 <span class="op">%~</span> <span class="fu">show</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>(<span class="ch">'a'</span>, <span class="st">&quot;5&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> over _1 <span class="fu">succ</span> (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(<span class="ch">&#39;b&#39;</span>, <span class="dv">5</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>) <span class="op">&amp;</span> _2 <span class="op">%~</span> <span class="fu">show</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>(<span class="ch">&#39;a&#39;</span>, <span class="st">&quot;5&quot;</span>)</span></code></pre></div>
 <p>Notably, we can compose lenses with the <code>(.)</code> operator from the <code>Prelude</code> to focus on parts of nested structures.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="dt">True</span>, (<span class="ch">'a'</span>, <span class="dv">5</span>)) <span class="op">^.</span> _2 <span class="op">.</span> _1</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ch">'a'</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> (<span class="dt">True</span>, (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>)) <span class="op">^.</span> _2 <span class="op">.</span> _1</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;a&#39;</span></span></code></pre></div>
 <h3 id="generic-lens"><code>generic-lens</code></h3>
 <p>The goal of using <code>lens</code> here is to be able to access the fields of the various record types that <code>calamity</code> exposes to us. We could use record accessors and update notation, but many of these records contain fields with the same name, so using them directly will lead to ambiguity errors. <code>generic-lens</code> solves this issue for us by allowing us to create lenses on the fly using the <code>OverloadedLabels</code> extension. For example, the <code>Member</code> type has a field called <code>guildID</code>. If we want to access this field from some member <code>mem</code>, we can simply write <code>mem ^. #guildID</code>.</p>
 <p>Note that to use the field names as lenses the type must have an instance of the <code>Generic</code> typeclass. This can be done with the <code>DeriveGeneric</code> extension, which, unsurprisingly, allows the user to write <code>deriving Generic</code>. All, or at least most, of the record types defined in <code>calamity</code> have a <code>Generic</code> instance.</p>
@@ -171,7 +367,7 @@
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runBotIO` has the type:</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>runBotIO</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> r a<span class="op">.</span> ( <span class="dt">Members</span> '[<span class="dt">Embed</span> <span class="dt">IO</span>, <span class="dt">Final</span> <span class="dt">IO</span>, <span class="dt">CacheEff</span>, <span class="dt">MetricEff</span>, <span class="dt">LogEff</span>] r</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> r a<span class="op">.</span> ( <span class="dt">Members</span> &#39;[<span class="dt">Embed</span> <span class="dt">IO</span>, <span class="dt">Final</span> <span class="dt">IO</span>, <span class="dt">CacheEff</span>, <span class="dt">MetricEff</span>, <span class="dt">LogEff</span>] r</span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>                 , <span class="dt">Typeable</span> (<span class="dt">SetupEff</span> r))</span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Token</span></span>
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Intents</span></span>
@@ -186,28 +382,28 @@
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `useConstantPrefix` has the type:</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ot">useConstantPrefix ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">ParsePrefix</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ot">useConstantPrefix ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">ParsePrefix</span> &#39;<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p>Having this interpreter will strip off the <code>ParsePrefix</code> effect, which will be required when we want to register commands later.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> useFullContext</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `useFullContext` has the type:</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ot">useFullContext ::</span> <span class="dt">Member</span> <span class="dt">CacheEff</span> r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">ConstructContext</span> <span class="dt">Message</span> <span class="dt">FullContext</span> <span class="dt">IO</span> () '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ot">useFullContext ::</span> <span class="dt">Member</span> <span class="dt">CacheEff</span> r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">ConstructContext</span> <span class="dt">Message</span> <span class="dt">FullContext</span> <span class="dt">IO</span> () &#39;<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p><code>useConstantPrefix</code> handles the <code>ConstructContext</code> effect, which determines what information we receive when a command is invoked.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runMetricsNoop</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runMetricsNoop` has the type:</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runMetricsNoop ::</span> <span class="dt">Sem</span> (<span class="dt">MetricEff</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runMetricsNoop ::</span> <span class="dt">Sem</span> (<span class="dt">MetricEff</span> &#39;<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p><code>runMetricsNoop</code> will strip off the <code>MetricEff</code> effect by ignoring any metrics that were collected. <code>calamity</code> doesn’t provide any other interpreter for the <code>MetricEff</code> effect, but if we wanted to we could write our own. That’s outside the scope of this post, however.</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runCacheInMemory</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- `runCacheInMemory` has the type:</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runCacheInMemory ::</span> <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">CacheEff</span> '<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="ot">runCacheInMemory ::</span> <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r <span class="ot">=&gt;</span> <span class="dt">Sem</span> (<span class="dt">CacheEff</span> &#39;<span class="op">:</span> r) a <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p><code>runCacheInMemory</code> strips the <code>CacheEff</code> for us by storing the cache in memory. If we wanted to we could write an effect interpreter that stores the cache in a file or database.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span> runDiToIO di</span>
@@ -218,7 +414,7 @@
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  ::</span> <span class="kw">forall</span> r level msg a<span class="op">.</span></span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>     <span class="dt">Member</span> (<span class="dt">Embed</span> <span class="dt">IO</span>) r</span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">=&gt;</span> <span class="dt">Di</span> level <span class="dt">Path</span> msg</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">Di</span> level <span class="dt">Path</span> msg '<span class="op">:</span> r) a</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> (<span class="dt">Di</span> level <span class="dt">Path</span> msg &#39;<span class="op">:</span> r) a</span>
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">-&gt;</span> <span class="dt">Sem</span> r a</span></code></pre></div>
 <p><code>runDiToIO</code> will interpret our <code>di</code> logging effect. Note that the <code>LogEff</code> effect mentioned earlier is just a type alias for <code>Di Level Path Message</code>, so this is just an interpreter for the <code>LogEff</code> effect.</p>
 <h2 id="our-first-event-handler">Our First Event Handler</h2>
@@ -227,7 +423,7 @@
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="op">$</span> <span class="kw">do</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    info <span class="op">@</span><span class="dt">Text</span> <span class="st">&quot;Bot starting up!&quot;</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageCreateEvt</span> <span class="op">$</span> \msg <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">&#39;MessageCreateEvt</span> <span class="op">$</span> \msg <span class="ot">-&gt;</span> <span class="kw">do</span></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>      when (<span class="st">&quot;Haskell&quot;</span> <span class="ot">`T.isInfixOf`</span> (msg <span class="op">^.</span> <span class="op">#</span>content)) <span class="op">$</span></span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">CreateReaction</span> msg msg (<span class="dt">UnicodeEmoji</span> <span class="st">&quot;😄&quot;</span>)</span></code></pre></div>
 <p><code>react</code> is a function that registers an event handler.</p>
@@ -270,7 +466,7 @@
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    addCommands <span class="op">$</span> <span class="kw">do</span></span>
 <span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>      helpCommand</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>      command <span class="op">@</span>'[<span class="dt">Int</span>, <span class="dt">Maybe</span> <span class="dt">GuildChannel</span>] <span class="st">&quot;slowmode&quot;</span> <span class="op">$</span> \ctx seconds mchan <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>      command <span class="op">@</span>&#39;[<span class="dt">Int</span>, <span class="dt">Maybe</span> <span class="dt">GuildChannel</span>] <span class="st">&quot;slowmode&quot;</span> <span class="op">$</span> \ctx seconds mchan <span class="ot">-&gt;</span> <span class="kw">do</span></span>
 <span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> cid <span class="ot">=</span> <span class="fu">maybe</span> (ctx <span class="op">^.</span> <span class="op">#</span>channel <span class="op">.</span> to getID) getID<span class="ot"> mchan ::</span> <span class="dt">Snowflake</span> <span class="dt">Channel</span></span>
 <span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        void <span class="op">.</span> invoke <span class="op">$</span> <span class="dt">ModifyChannel</span> cid <span class="op">$</span> def</span>
 <span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> <span class="op">#</span>rateLimitPerUser <span class="op">?~</span> seconds</span>
@@ -331,7 +527,7 @@
 <p>It also requires the item being sent to have a <code>ToMessage</code> instance. Many types have this instance, among them the various string types, files, embeds, and mentions.</p>
 <p>Let’s create an event handler that responds to any message edit with “Hey! I saw that!”.</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">'MessageUpdateEvt</span> <span class="op">$</span> \(_oldMsg, newMsg) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    react <span class="op">@</span><span class="dt">&#39;MessageUpdateEvt</span> <span class="op">$</span> \(_oldMsg, newMsg) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>      void <span class="op">.</span> tell <span class="op">@</span><span class="dt">Text</span> newMsg <span class="op">$</span> <span class="st">&quot;Hey! I saw that!&quot;</span></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- snip --</span></span></code></pre></div>
 <h2 id="supercharge-your-snowflakes-with-upgrade">Supercharge your <code>Snowflake</code>s with <code>upgrade</code></h2>
@@ -348,13 +544,11 @@
 <p>If there’s further interest in this I may be inclined to write another post where I write a more fully-featured bot and step through the process, involving other libraries like <code>aeson</code> and database libraries, and defining our own polysemy effects and effect interpreters.</p>
 <p>The full source code for the bot is available <a href="https://github.com/MorrowM/calamity-tutorial">here</a>.</p>
     </section>
-</article>
-    </main>
+</article>]]></description>
+    <pubDate>Thu, 29 Apr 2021 00:00:00 UT</pubDate>
+    <guid>https://morrowm.github.io//posts/2021-04-29-calamity.html</guid>
+    <dc:creator>MorrowM</dc:creator>
+</item>
 
-    <footer>
-        Site proudly generated by
-        <a class="no-link-color" href="http://jaspervdj.be/hakyll">Hakyll</a>
-    </footer>
-</body>
-
-</html>
+    </channel>
+</rss>
