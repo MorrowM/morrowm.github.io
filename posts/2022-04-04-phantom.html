@@ -7,7 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>From Partitions to Wordle - Type Safety with Phantom Types - MorrowM</title>
     <link rel="stylesheet" href="../css/default.css" />
-    <link rel="stylesheet" href="../css/syntax.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/vs2015.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/languages/haskell.min.js"></script>
+    <link href="https://pvinis.github.io/iosevka-webfont/3.4.1/iosevka.css" rel="stylesheet" />
+    <script>hljs.highlightAll();</script>
 </head>
 
 <body>
@@ -42,7 +46,10 @@
 <p>Pretty clean, right? Well when we run it:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> greaterThan7sFirst [<span class="dv">4</span>,<span class="dv">9</span>,<span class="dv">4</span>,<span class="dv">8</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">9</span>,<span class="dv">2</span>,<span class="dv">6</span>]</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>[<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">2</span>,<span class="dv">6</span>,<span class="dv">9</span>,<span class="dv">8</span>,<span class="dv">9</span>]</span></code></pre></div>
-<p>Oops! It looks like we put things in the wrong order. The fix is simple, of course, just swap the order in the tuple. But it’d be nice if we could prevent these sorts of mix-ups from happening in the first place. Also, it would be nice if we could reflect this in the type signature of <code>partition</code>, that way we don’t even need to read the documentation every time we want to remember which half of the tuple is which.</p>
+<p>Oops! It looks like we put things in the wrong order. The fix is simple, of course, just swap the order in the tuple.
+But it’d be nice if we could prevent these sorts of mix-ups from happening in the first place. Also,
+it would be nice if we could reflect this in the type signature of <code>partition</code>, that way we don’t even need to read the documentation
+every time we want to remember which half of the tuple is which.</p>
 <h2 id="the-separate-newtypes-approach">The “separate <code>newtype</code>s” Approach</h2>
 <p>So we want to reflect the different meanings of the lists in the type system. So we can create a couple of newtypes:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">TruePart</span> a <span class="ot">=</span> <span class="dt">Trues</span> [a]</span>
@@ -62,10 +69,11 @@
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> (<span class="dt">Falses</span> lessThans, <span class="dt">Trues</span> greaterThans) <span class="ot">=</span> partitionTyped (<span class="op">&gt;</span><span class="dv">7</span>) xs</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> greaterThans <span class="op">++</span> lessThans</span></code></pre></div>
 <p>Immediately we get a complaint:</p>
-<pre class="plain"><code>• Couldn't match type ‘TruePart Int’ with ‘FalsePart a’
+<pre class="plaintext"><code>• Couldn't match type ‘TruePart Int’ with ‘FalsePart a’
   Expected type: (FalsePart a, TruePart a1)
     Actual type: (TruePart Int, FalsePart Int)</code></pre>
-<p>This is great! The type checker has successfully saved us from our own foolishness. Fixing our function makes it type check:</p>
+<p>This is great! The type checker has successfully saved us from our own foolishness. Fixing our function
+makes it type check:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Moves the elements of a given list that are greater than 7 to the front.</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ot">greaterThan7sFirst ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>greaterThan7sFirst xs <span class="ot">=</span> </span>
@@ -74,15 +82,26 @@
 <p>And testing it out, we have our desired behaviour:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> greaterThan7sFirst [<span class="dv">4</span>,<span class="dv">9</span>,<span class="dv">4</span>,<span class="dv">8</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">9</span>,<span class="dv">2</span>,<span class="dv">6</span>]</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>[<span class="dv">9</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">2</span>,<span class="dv">6</span>]</span></code></pre></div>
-<p>This approach does have the downside that we’ve had to introduce two new datatypes to accomplish the task. Any instances we write for one of them need to be duplicated for the other. What if we had a single type that did both jobs?</p>
+<p>This approach does have the downside that we’ve had to introduce two new datatypes to accomplish the task. Any
+instances we write for one of them need to be duplicated for the other. What if we had a single type that
+did both jobs?</p>
 <h2 id="the-phantom-types-approach">The Phantom Types Approach</h2>
 <p>Consider the following type instead:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE DataKinds #-}</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE KindSignatures #-}</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">Part</span> (<span class="ot">bool ::</span> <span class="dt">Bool</span>) a <span class="ot">=</span> <span class="dt">Part</span> {<span class="ot"> unPart ::</span> [a] } </span></code></pre></div>
-<p>This type has a seemingly extraneous type parameter with what appears to be a type signature on it, <code>(bool :: Bool)</code>. This field is indeed “extraneous” in a sense, but what it does is that when we construct a <code>Part</code> we can choose what we want <code>bool</code> to be. If we have two values where the value of <code>bool</code> is different, then we won’t be able to confuse one for the other, since their types will be different, even if the actual runtime values are the same. <code>bool</code> is called a phantom type parameter, since it doesn’t appear on the right-hand side of the <code>=</code>.</p>
-<p>So what sorts of values can <code>bool</code> take on? Well, that syntax that looks like a type signature is actually a <em>kind signature</em>. So <code>bool</code> exists on the type level and thus has a kind that dictates what sort of values it can take on. In this case, its kind is <code>Bool</code>, so it can take on any of the values of <code>Bool</code>, meaning <code>True</code> or <code>False</code>. This can be a bit confusing since normally <code>True</code> and <code>False</code> are runtime values. The <code>DataKinds</code> extension essentially creates two new types called <code>'True</code> and <code>'False</code> with kind <code>Bool</code>. These are separate from the value level <code>True</code> and <code>False</code>. The compiler allows us to leave off the tick marks if it’s still clear what we’re referring to. <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p>This type has a seemingly extraneous type parameter with what appears to be a type signature on it, <code>(bool :: Bool)</code>.
+This field is indeed “extraneous” in a sense, but what it does is that when we construct a <code>Part</code> we can choose
+what we want <code>bool</code> to be. If we have two values where the value of <code>bool</code> is different, then we won’t be able to
+confuse one for the other, since their types will be different, even if the actual runtime values are the same.
+<code>bool</code> is called a phantom type parameter, since it doesn’t appear on the right-hand side of the <code>=</code>.</p>
+<p>So what sorts of values can <code>bool</code> take on? Well, that syntax that looks like a type signature is actually a <em>kind signature</em>.
+So <code>bool</code> exists on the type level and thus has a kind that dictates what sort of values it can take on. In this case,
+its kind is <code>Bool</code>, so it can take on any of the values of <code>Bool</code>, meaning <code>True</code> or <code>False</code>. This can be a bit confusing
+since normally <code>True</code> and <code>False</code> are runtime values. The <code>DataKinds</code> extension essentially creates two new types
+called <code>'True</code> and <code>'False</code> with kind <code>Bool</code>. These are separate from the value level <code>True</code> and <code>False</code>. The compiler
+allows us to leave off the tick marks if it’s still clear what we’re referring to. <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
 <p>What does this look like in practice? Here’s an example:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">truePart ::</span> <span class="dt">Part</span> <span class="dt">True</span> <span class="dt">Int</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>truePart <span class="ot">=</span> <span class="dt">Part</span> [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>]</span>
@@ -92,22 +111,27 @@
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- The following gives a type error!</span></span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>parts <span class="ot">=</span> [truePart, falsePart]</span></code></pre></div>
-<pre class="plain"><code>• Couldn't match type ‘'False’ with ‘'True’
+<pre class="plaintext"><code>• Couldn't match type ‘'False’ with ‘'True’
   Expected type: Part 'True Int
     Actual type: Part 'False Int</code></pre>
-<p>So we can’t define <code>parts</code> since it would have two elements of different types, even though their contents are the same. This is a good thing, we can use this to implement a type-safe <code>partition</code>:</p>
+<p>So we can’t define <code>parts</code> since it would have two elements of different types, even though
+their contents are the same. This is a good thing, we can use this to implement
+a type-safe <code>partition</code>:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">partitionTyped ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> (<span class="dt">Part</span> <span class="dt">True</span> a, <span class="dt">Part</span> <span class="dt">False</span> a)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>partitionTyped p xs <span class="ot">=</span> </span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> (trues, falses) <span class="ot">=</span> partition p xs</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> (<span class="dt">Part</span> trues, <span class="dt">Part</span> falses)</span></code></pre></div>
-<p>There’s an issue when we go to implement <code>greaterThan7sFirst</code>, though. We don’t have two separate constructors to match on as we did with the newtypes. We can work around that, but it’s not very ergonomic:</p>
+<p>There’s an issue when we go to implement <code>greaterThan7sFirst</code>, though. We don’t have two
+separate constructors to match on as we did with the newtypes. We can work around that,
+but it’s not very ergonomic:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">greaterThan7sFirst ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>greaterThan7sFirst xs <span class="ot">=</span> </span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span><span class="ot"> greaterThans ::</span> <span class="dt">Part</span> <span class="dt">True</span> <span class="dt">Int</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">      lessThans ::</span> <span class="dt">Part</span> <span class="dt">False</span> <span class="dt">Int</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>      (greaterThans, lessThans) <span class="ot">=</span> partitionTyped (<span class="op">&gt;</span><span class="dv">7</span>) xs</span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> unPart greaterThans <span class="op">++</span> unPart lessThans</span></code></pre></div>
-<p>It would be much nicer to have separate constructors that we could match on like with the two newtypes. Turns out pattern synonyms are just the thing we need!</p>
+<p>It would be much nicer to have separate constructors that we could match on like with the
+two newtypes. Turns out pattern synonyms are just the thing we need!</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE PatternSynonyms #-}</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span> <span class="dt">Trues</span><span class="ot"> ::</span> [a] <span class="ot">-&gt;</span> <span class="dt">Part</span> <span class="dt">True</span> a</span>
@@ -117,10 +141,14 @@
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span> <span class="dt">Falses</span><span class="ot"> ::</span> [a] <span class="ot">-&gt;</span> <span class="dt">Part</span> <span class="dt">False</span> a</span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span> <span class="dt">Falses</span> xs <span class="ot">=</span> <span class="dt">Part</span> xs</span>
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# COMPLETE Falses #-}</span></span></code></pre></div>
-<p>So pattern synonyms allow us to define, well, synonyms for existing patterns. In this case, we’ve defined two patterns <code>Trues</code> and <code>Falses</code> that are the same as <code>Part</code>. The only difference is that we’ve restricted their types. If we ask GHCi the type of <code>Part</code> we get:</p>
+<p>So pattern synonyms allow us to define, well, synonyms for existing patterns. In this case,
+we’ve defined two patterns <code>Trues</code> and <code>Falses</code> that are the same as <code>Part</code>. The only difference
+is that we’ve restricted their types. If we ask GHCi the type of <code>Part</code> we get:</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> <span class="op">:</span>t <span class="dt">Part</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Part</span><span class="ot"> ::</span> [a] <span class="ot">-&gt;</span> <span class="dt">Part</span> bool a</span></code></pre></div>
-<p>So of course, <code>Part</code> can return a <code>Part</code> with any value of <code>bool</code> that we choose. In the case of <code>Trues</code> we want to restrict its type to only match when the type of the receiving value has a <code>bool</code> parameter equal to <code>True</code>. By giving <code>Trues</code> this restricted type we accomplish two things:</p>
+<p>So of course, <code>Part</code> can return a <code>Part</code> with any value of <code>bool</code> that we choose. In the case of <code>Trues</code> we
+want to restrict its type to only match when the type of the receiving value has a <code>bool</code> parameter
+equal to <code>True</code>. By giving <code>Trues</code> this restricted type we accomplish two things:</p>
 <ol type="1">
 <li>Any values <em>created</em> with <code>Trues</code> will have <code>True</code> as the <code>bool</code> type parameter.</li>
 <li>Any values <em>matched on</em> by <code>Trues</code> must have <code>True</code> as the <code>bool</code> type parameter.</li>
@@ -139,7 +167,9 @@
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Actual</span> <span class="kw">type</span><span class="op">:</span> <span class="dt">Part</span> <span class="dt">'True</span> <span class="dt">Int</span></span>
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    • <span class="dt">In</span> the expression<span class="op">:</span> truePart</span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">In</span> a <span class="kw">pattern</span> binding<span class="op">:</span> <span class="dt">Falses</span> f <span class="ot">=</span> truePart</span></code></pre></div>
-<p>The <code>COMPLETE</code> pragmas above are there to tell GHC that when pattern matching, matching only on <code>Trues</code> (or only on <code>Falses</code>) constitutes a complete pattern match, this way GHC doesn’t give us a “missing patterns” warning if we don’t provide a fallback case.</p>
+<p>The <code>COMPLETE</code> pragmas above are there to tell GHC that when pattern matching, matching only on
+<code>Trues</code> (or only on <code>Falses</code>) constitutes a complete pattern match, this way GHC doesn’t give
+us a “missing patterns” warning if we don’t provide a fallback case.</p>
 <p>Now we can implement <code>greaterThan7sFirst</code> nicely:</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ot">greaterThan7sFirst ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>greaterThan7sFirst xs <span class="ot">=</span> </span>
@@ -150,10 +180,12 @@
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>greaterThan7sFirst xs <span class="ot">=</span> </span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> (<span class="dt">Falses</span> lessThans, <span class="dt">Trues</span> greaterThans) <span class="ot">=</span> partitionTyped (<span class="op">&gt;</span><span class="dv">7</span>) xs</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> greaterThans <span class="op">++</span> lessThans</span></code></pre></div>
-<pre class="plain"><code>• Couldn't match type ‘'True’ with ‘'False’
+<pre class="plaintext"><code>• Couldn't match type ‘'True’ with ‘'False’
   Expected type: (Part 'False Int, Part 'True Int)
     Actual type: (Part 'True Int, Part 'False Int)</code></pre>
-<p>Nice. As a bonus, let’s implement <code>Show</code> instances that display the results using our pattern synonym syntax. We’ll need <code>FlexibleInstances</code> to convince GHC that it’s okay to write separate instances for <code>True</code> and <code>False</code>.</p>
+<p>Nice. As a bonus, let’s implement <code>Show</code> instances that display the results
+using our pattern synonym syntax. We’ll need <code>FlexibleInstances</code> to convince GHC
+that it’s okay to write separate instances for <code>True</code> and <code>False</code>.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE FlexibleInstances #-}</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">Part</span> <span class="dt">False</span> a) <span class="kw">where</span></span>
@@ -164,36 +196,59 @@
 <div class="sourceCode" id="cb21"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> partitionTyped (<span class="op">&gt;</span><span class="dv">7</span>) [<span class="dv">4</span>,<span class="dv">9</span>,<span class="dv">4</span>,<span class="dv">8</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">9</span>,<span class="dv">2</span>,<span class="dv">6</span>]</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>(<span class="dt">Trues</span> [<span class="dv">9</span>,<span class="dv">8</span>,<span class="dv">9</span>],<span class="dt">Falses</span> [<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">2</span>,<span class="dv">6</span>])</span></code></pre></div>
 <h2 id="wordle-guesses-and-masters">Wordle: Guesses and Masters</h2>
-<p>This particular motivating example may feel a bit overcomplicated for what it’s trying to do, and indeed the solution with two newtypes was already quite satisfactory. The benefits to using phantom types with <code>DataKinds</code> really come up more in situations where you may want to work more with the type, unlike here where it exists purely to be pattern matched on immediately like in this example.</p>
-<p>As an example, a while ago I wrote a <a href="https://github.com/morrowm/turtlet">Wordle solver</a> that makes use of this technique to differentiate between words that represent a guess versus words that represent a possible solution. In that case, I had something like</p>
+<p>This particular motivating example may feel a bit overcomplicated for what it’s trying to do, and
+indeed the solution with two newtypes was already quite satisfactory. The benefits to using phantom types
+with <code>DataKinds</code> really come up more in situations where you may want to work more with the type, unlike here where it exists purely to be pattern matched on immediately like in this example.</p>
+<p>As an example, a while ago I wrote a
+<a href="https://github.com/morrowm/turtlet">Wordle solver</a> that makes use of this technique to differentiate
+between words that represent a guess versus words that represent a possible solution. In that case, I had
+something like</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- &quot;Wordlet&quot; is a cutesy word that I use to refer to a Wordle word.</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">WordletType</span> <span class="ot">=</span> <span class="dt">Guess</span> <span class="op">|</span> <span class="dt">Master</span></span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">Wordlet</span> (<span class="ot">wlty ::</span> <span class="dt">WordletType</span>) <span class="ot">=</span> <span class="dt">Wordlet</span> { <span class="op">...</span> }</span>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">WordList</span> (<span class="ot">wlty ::</span> <span class="dt">WordletType</span>) <span class="ot">=</span> <span class="dt">WordList</span> {<span class="ot"> getWordList ::</span> <span class="dt">Data.Vector.Vector</span> (<span class="dt">Wordlet</span> wlty) }</span></code></pre></div>
-<p>Because words and word lists are tagged, it means that on the one hand, I have type safety, so if I have a function like</p>
+<p>Because words and word lists are tagged, it means that on the one hand, I have type safety, so if I have a
+function like</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ot">againstMaster ::</span> <span class="dt">Wordlet</span> <span class="dt">Guess</span> <span class="ot">-&gt;</span> <span class="dt">Wordlet</span> <span class="dt">Master</span> <span class="ot">-&gt;</span> <span class="dt">Colors</span></span></code></pre></div>
-<p>which checks a given guess word against a candidate master word, then I can use it to write the following function, which checks if a given guess word and feedback to that guess word is consistent with some possible master word:</p>
+<p>which checks a given guess word against a candidate master word, then I can use
+it to write the following function, which checks if a given guess word and feedback
+to that guess word is consistent with some possible master word:</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ot">consistentWith ::</span> <span class="dt">Colors</span> <span class="ot">-&gt;</span> <span class="dt">Wordlet</span> <span class="dt">Guess</span> <span class="ot">-&gt;</span> <span class="dt">Wordlet</span> <span class="dt">Master</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>consistentWith colors guess master <span class="ot">=</span> guess <span class="ot">`againstMaster`</span> master <span class="op">==</span> colors</span></code></pre></div>
-<p>This is just a small example, but the fact that words are tagged ensures that I can’t mess up the argument order when applying <code>againstMaster</code>. Another example would be the <code>filterMasters</code> function, which filters a word list full of master word candidates to only those that are consistent with a given guess word and response to that guess word</p>
+<p>This is just a small example, but the fact that words are tagged ensures that I can’t mess up
+the argument order when applying <code>againstMaster</code>. Another example would be the <code>filterMasters</code>
+function, which filters a word list full of master word candidates to only those that
+are consistent with a given guess word and response to that guess word</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ot">filterMasters ::</span> <span class="dt">Colors</span> <span class="ot">-&gt;</span> <span class="dt">Wordlet</span> <span class="dt">Guess</span> <span class="ot">-&gt;</span> <span class="dt">WordList</span> <span class="dt">Master</span> <span class="ot">-&gt;</span> <span class="dt">WordList</span> <span class="dt">Master</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>filterMasters colors guess (<span class="dt">WordList</span> masters) <span class="ot">=</span></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">WordList</span> <span class="op">$</span> Data.Vector.filter (consistentWith colors guess) masters</span></code></pre></div>
-<p>The types guide us towards a solution. We have a vector of <code>WordList Master</code>s and we want to filter it. So of course we need <code>Data.Vector.filter</code>. The filtering function needs to combine some <code>Colors</code>, a <code>Wordlet Guess</code> and a <code>WordLet Master</code> in some way to give us a <code>Bool</code>. This is exactly <code>consistentWith</code>. <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
-<p>When I first added these phantom types to my code it indeed found a couple of places where I was implicitly confusing a master word for a guess word.</p>
-<p>As far as how this is beneficial over a couple of newtypes, it means that I don’t need separate functions for dealing with guess words and master words in cases where it doesn’t matter. For example:</p>
+<p>The types guide us towards a solution. We have a vector of <code>WordList Master</code>s and we want
+to filter it. So of course we need <code>Data.Vector.filter</code>. The filtering function needs to combine
+some <code>Colors</code>, a <code>Wordlet Guess</code> and a <code>WordLet Master</code> in some way to give us a <code>Bool</code>. This is
+exactly <code>consistentWith</code>. <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p>When I first added these phantom types to my code it indeed found a couple of places where I was
+implicitly confusing a master word for a guess word.</p>
+<p>As far as how this is beneficial over a couple of newtypes, it means that I don’t need separate functions
+for dealing with guess words and master words in cases where it doesn’t matter. For example:</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ot">wordletToString ::</span> <span class="dt">Wordlet</span> wlty <span class="ot">-&gt;</span> <span class="dt">String</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ot">parseWordlet ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">Text</span> (<span class="dt">Wordlet</span> wlty)</span></code></pre></div>
-<p>In both of these cases it doesn’t matter whether we’re dealing with a guess word or a master word, and the phantom types approach makes it very easy to be polymorphic over the type of word, since the implementation is the same, and thus they only involve a single function body.</p>
-<p>So we’ve learned today that phantom types give us the ability to both communicate more in our type signatures, and they can help us prevent mistakes and misuses by allowing us to track where a value came from.</p>
+<p>In both of these cases it doesn’t matter whether we’re dealing with a guess word or a master word, and
+the phantom types approach makes it very easy to be polymorphic over the type of word, since the implementation
+is the same, and thus they only involve a single function body.</p>
+<p>So we’ve learned today that phantom types give us the ability to both communicate more in our type signatures, and they
+can help us prevent mistakes and misuses by allowing us to track where a value came from.</p>
 <p><a href="https://gist.github.com/MorrowM/ba41e2cc9ab57ef6df8c651452aa53c5">Link to the full code for this post</a></p>
-<section class="footnotes" role="doc-endnotes">
+<section class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1" role="doc-endnote"><p>If we had another type in scope that happened to be called <code>True</code> then we’d need to use ticks in order for GHC to understand that we’re referring to the lifted version of the value <code>True</code> and not the type <code>True</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2" role="doc-endnote"><p>Presumably, I used <code>againstMaster</code> directly first and then abstracted it out into <code>consistentWith</code>, but the point still stands- <code>againstMaster</code> is the obvious choice for comparing some <code>Colors</code> combined with a guess word and a master word, just by looking at the types involved.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1" role="doc-endnote"><p>If we had another type in scope that happened to be called <code>True</code> then we’d need to use ticks
+in order for GHC to understand that we’re referring to the lifted version of the value <code>True</code> and
+not the type <code>True</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>Presumably, I used <code>againstMaster</code> directly first and then abstracted it out into <code>consistentWith</code>, but
+the point still stands- <code>againstMaster</code> is the obvious choice for comparing some <code>Colors</code> combined
+with a guess word and a master word, just by looking at the types involved.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
     </section>

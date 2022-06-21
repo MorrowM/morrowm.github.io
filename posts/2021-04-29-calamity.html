@@ -7,7 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Write your own Discord bot in Haskell with Calamity - MorrowM</title>
     <link rel="stylesheet" href="../css/default.css" />
-    <link rel="stylesheet" href="../css/syntax.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/vs2015.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/languages/haskell.min.js"></script>
+    <link href="https://pvinis.github.io/iosevka-webfont/3.4.1/iosevka.css" rel="stylesheet" />
+    <script>hljs.highlightAll();</script>
 </head>
 
 <body>
@@ -350,7 +354,7 @@ EHType MessageCreateEvt :: *
 <p>There are many things we didn’t get to cover in this post. We only scratched the surface of the commands DSL, we didn’t cover metrics collection, presences, nor the countless datatypes that are defined to model the Discord API. We also didn’t cover most of the effects available in the <code>polysemy</code> library, which could come in handy for storing configuration data, state, etc. But that’s where the documentation comes in. If you’re new to developing real-world Haskell programs, learning how to read the haddocks is invaluable. (A tip: Don’t forget to read the instances!)</p>
 <p>If there’s further interest in this I may be inclined to write another post where I write a more fully-featured bot and step through the process, involving other libraries like <code>aeson</code> and database libraries, and defining our own polysemy effects and effect interpreters.</p>
 <p>The full source code for the bot is available <a href="https://github.com/MorrowM/calamity-tutorial">here</a>.</p>
-<section class="footnotes" role="doc-endnotes">
+<section class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1" role="doc-endnote"><p>This is somewhat inaccurate as of <code>TypeInType</code>, in which the kind level and type level have been unified. A more precise way of saying this is that <code>DataKinds</code> gives us the type level entity <code>'MessageCreateEvt</code>, whose kind is <code>EventType</code>, which previously was uninhabited at the type level.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
