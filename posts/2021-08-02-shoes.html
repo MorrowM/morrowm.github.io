@@ -14,6 +14,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/languages/haskell.min.js"></script>
     <link href="https://pvinis.github.io/iosevka-webfont/3.4.1/iosevka.css" rel="stylesheet" />
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>hljs.highlightAll();</script>
 </head>
 
@@ -116,7 +118,7 @@ Tie the left shoe.
 Tie the right shoe.
 Done!</code></pre>
 <p><a href="https://gist.github.com/MorrowM/6cd60264dd2efdd5633522c1a7242dde">Link to the complete code</a></p>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1"><p>We can, in fact, do this with the GHC language extension <code>GADTSyntax</code>, which will be on by default starting in GHC 9.2. Of course, we’re getting ahead of ourselves.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
@@ -125,7 +127,7 @@ Done!</code></pre>
 <div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>foo (<span class="dt">ABool</span> b) <span class="ot">=</span> b</span></code></pre></div>
 <p>Both <code>foo :: Expr a -&gt; a</code> and <code>foo :: Expr a -&gt; Bool</code> are valid types to give <code>foo</code> here, neither being more general than the other.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</section>
+</aside>
     </section>
 </article>
         </main>

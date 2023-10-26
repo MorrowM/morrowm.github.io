@@ -7,9 +7,44 @@
         <description><![CDATA[MorrowM's personal blog.]]></description>
         <atom:link href="https://morrowm.github.io//rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 19 Jul 2022 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 25 Sep 2023 00:00:00 UT</lastBuildDate>
         <item>
-    <title>One of a Kind&colon; An Introduction to Kinds in Haskell</title>
+    <title>Another intution for epsilon-delta</title>
+    <link>https://morrowm.github.io//posts/2023-09-25-limits.html</link>
+    <description><![CDATA[<article>
+    <section class="header">
+        September 25, 2023
+        
+    </section>
+    <section>
+        <p>Consider the following lemma:</p>
+<p><em>Lemma.</em> If <span class="math inline">\(|x| &lt; \varepsilon\)</span> for all <span class="math inline">\(\varepsilon &gt; 0\)</span> then <span class="math inline">\(x = 0\)</span>.</p>
+<p>And a corrolary of that lemma:</p>
+<p><em>Corrolary.</em> If <span class="math inline">\(|x - y| &lt; \varepsilon\)</span> for all <span class="math inline">\(\varepsilon &gt; 0\)</span> then <span class="math inline">\(x = y\)</span>.</p>
+    </section>
+</article>]]></description>
+    <pubDate>Mon, 25 Sep 2023 00:00:00 UT</pubDate>
+    <guid>https://morrowm.github.io//posts/2023-09-25-limits.html</guid>
+    <dc:creator>MorrowM</dc:creator>
+</item>
+<item>
+    <title>How to Write foldl Using foldr</title>
+    <link>https://morrowm.github.io//posts/2023-09-04-foldr.html</link>
+    <description><![CDATA[<article>
+    <section class="header">
+        September  4, 2023
+        
+    </section>
+    <section>
+        
+    </section>
+</article>]]></description>
+    <pubDate>Mon, 04 Sep 2023 00:00:00 UT</pubDate>
+    <guid>https://morrowm.github.io//posts/2023-09-04-foldr.html</guid>
+    <dc:creator>MorrowM</dc:creator>
+</item>
+<item>
+    <title>One of a Kind: An Introduction to Kinds in Haskell</title>
     <link>https://morrowm.github.io//posts/2022-07-19-kinds.html</link>
     <description><![CDATA[<article>
     <section class="header">
@@ -165,13 +200,13 @@ that has been verified to exist, perhaps by sending a verification email.</p>
 <span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">--     ^^^^</span></span>
 <span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">--    This is a phantom type parameter of kind Bool</span></span>
 <span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">--    using DataKinds.</span></span></code></pre></div>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1"><p>Using the more liberal interpretation of “type”, which refers to anything that appears in the type level namespace. This is the terminology the Haskell language report uses along with the more explicit “type expression”.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn2"><p>I will purposefully be ignoring <code>TYPE r</code> in this post for simplicity.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</section>
+</aside>
     </section>
 </article>]]></description>
     <pubDate>Tue, 19 Jul 2022 00:00:00 UT</pubDate>
@@ -393,7 +428,7 @@ is the same, and thus they only involve a single function body.</p>
 <p>So we’ve learned today that phantom types give us the ability to both communicate more in our type signatures, and they
 can help us prevent mistakes and misuses by allowing us to track where a value came from.</p>
 <p><a href="https://gist.github.com/MorrowM/ba41e2cc9ab57ef6df8c651452aa53c5">Link to the full code for this post</a></p>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1"><p>If we had another type in scope that happened to be called <code>True</code> then we’d need to use ticks
@@ -403,7 +438,7 @@ not the type <code>True</code>.<a href="#fnref1" class="footnote-back" role="doc
 the point still stands- <code>againstMaster</code> is the obvious choice for comparing some <code>Colors</code> combined
 with a guess word and a master word, just by looking at the types involved.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</section>
+</aside>
     </section>
 </article>]]></description>
     <pubDate>Mon, 04 Apr 2022 00:00:00 UT</pubDate>
@@ -498,7 +533,7 @@ Tie the left shoe.
 Tie the right shoe.
 Done!</code></pre>
 <p><a href="https://gist.github.com/MorrowM/6cd60264dd2efdd5633522c1a7242dde">Link to the complete code</a></p>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1"><p>We can, in fact, do this with the GHC language extension <code>GADTSyntax</code>, which will be on by default starting in GHC 9.2. Of course, we’re getting ahead of ourselves.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
@@ -507,7 +542,7 @@ Done!</code></pre>
 <div class="sourceCode" id="cb14"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>foo (<span class="dt">ABool</span> b) <span class="ot">=</span> b</span></code></pre></div>
 <p>Both <code>foo :: Expr a -&gt; a</code> and <code>foo :: Expr a -&gt; Bool</code> are valid types to give <code>foo</code> here, neither being more general than the other.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</section>
+</aside>
     </section>
 </article>]]></description>
     <pubDate>Mon, 02 Aug 2021 00:00:00 UT</pubDate>
@@ -609,12 +644,12 @@ Done!</code></pre>
 <p>What this syntax means is that the type variable <code>f</code> must <em>uniquely</em> determine the type variable <code>idx</code>. This has two effects. One, if we have an instance <code>instance Indexed [] Int</code>, then we can’t go ahead and write another instance <code>instance Indexed [] Integer</code>, since then <code>f</code> doesn’t uniquely determine <code>idx</code>. Two, GHC can now infer the type of <code>idx</code> just from knowing what <code>f</code> is, so our program will now type check. GHC will see we’re indexing a list, and therefore the index type <em>must</em> be <code>Int</code>, so the type of the literal <code>3</code> here must be <code>Int</code>.</p>
 <p>Looking back, when we used a type family, we were doing the same thing, only implicitly. When we write <code>Idx f</code> it’s implicit that <code>Idx</code> gives back a single type when applied. In other words, <code>f</code> <em>uniquely</em> determines <code>Idx f</code>.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
 <p>Both of these methods give very similar results, but it’s good to be familiar with both of them, as they can have different ergonomics. It’s also good to be able to recognize both of these patterns in other libraries, as they’re both used throughout Hackage.</p>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1"><p>Interestingly, we can go in the other direction with the <a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/exts/type_families.html#extension-TypeFamilyDependencies"><code>TypeFamilyDependencies</code></a> extension.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</section>
+</aside>
     </section>
 </article>]]></description>
     <pubDate>Sat, 26 Jun 2021 00:00:00 UT</pubDate>
@@ -950,12 +985,12 @@ EHType MessageCreateEvt :: *
 <p>There are many things we didn’t get to cover in this post. We only scratched the surface of the commands DSL, we didn’t cover metrics collection, presences, nor the countless datatypes that are defined to model the Discord API. We also didn’t cover most of the effects available in the <code>polysemy</code> library, which could come in handy for storing configuration data, state, etc. But that’s where the documentation comes in. If you’re new to developing real-world Haskell programs, learning how to read the haddocks is invaluable. (A tip: Don’t forget to read the instances!)</p>
 <p>If there’s further interest in this I may be inclined to write another post where I write a more fully-featured bot and step through the process, involving other libraries like <code>aeson</code> and database libraries, and defining our own polysemy effects and effect interpreters.</p>
 <p>The full source code for the bot is available <a href="https://github.com/MorrowM/calamity-tutorial">here</a>.</p>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1"><p>This is somewhat inaccurate as of <code>TypeInType</code>, in which the kind level and type level have been unified. A more precise way of saying this is that <code>DataKinds</code> gives us the type level entity <code>'MessageCreateEvt</code>, whose kind is <code>EventType</code>, which previously was uninhabited at the type level.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</section>
+</aside>
     </section>
 </article>]]></description>
     <pubDate>Thu, 29 Apr 2021 00:00:00 UT</pubDate>
