@@ -7,43 +7,8 @@
         <description><![CDATA[MorrowM's personal blog.]]></description>
         <atom:link href="https://morrowm.github.io//rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Mon, 25 Sep 2023 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 19 Jul 2022 00:00:00 UT</lastBuildDate>
         <item>
-    <title>Another intution for epsilon-delta</title>
-    <link>https://morrowm.github.io//posts/2023-09-25-limits.html</link>
-    <description><![CDATA[<article>
-    <section class="header">
-        September 25, 2023
-        
-    </section>
-    <section>
-        <p>Consider the following lemma:</p>
-<p><em>Lemma.</em> If <span class="math inline">\(|x| &lt; \varepsilon\)</span> for all <span class="math inline">\(\varepsilon &gt; 0\)</span> then <span class="math inline">\(x = 0\)</span>.</p>
-<p>And a corrolary of that lemma:</p>
-<p><em>Corrolary.</em> If <span class="math inline">\(|x - y| &lt; \varepsilon\)</span> for all <span class="math inline">\(\varepsilon &gt; 0\)</span> then <span class="math inline">\(x = y\)</span>.</p>
-    </section>
-</article>]]></description>
-    <pubDate>Mon, 25 Sep 2023 00:00:00 UT</pubDate>
-    <guid>https://morrowm.github.io//posts/2023-09-25-limits.html</guid>
-    <dc:creator>MorrowM</dc:creator>
-</item>
-<item>
-    <title>How to Write foldl Using foldr</title>
-    <link>https://morrowm.github.io//posts/2023-09-04-foldr.html</link>
-    <description><![CDATA[<article>
-    <section class="header">
-        September  4, 2023
-        
-    </section>
-    <section>
-        
-    </section>
-</article>]]></description>
-    <pubDate>Mon, 04 Sep 2023 00:00:00 UT</pubDate>
-    <guid>https://morrowm.github.io//posts/2023-09-04-foldr.html</guid>
-    <dc:creator>MorrowM</dc:creator>
-</item>
-<item>
     <title>One of a Kind: An Introduction to Kinds in Haskell</title>
     <link>https://morrowm.github.io//posts/2022-07-19-kinds.html</link>
     <description><![CDATA[<article>
