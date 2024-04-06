@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frog's Age</title>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1,
+        p {
+            font-size: 48px;
+            color: #333;
+            margin: 0;
+        }
+
+        #age {
+            font-size: 96px;
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <h1>Frog is currently</h1>
+        </div>
+
+        <div>
+            <p id="age"></p>
+        </div>
+
+        <div>
+            <h1>years old</h1>
+        </div>
+    </div>
+
+    <script>
+        const dob = new Date('1995-04-27');
+
+        const ageDate = new Date(Date.now() - dob.getTime());
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+        document.getElementById('age').textContent = age;
+    </script>
+</body>
+
+</html>
