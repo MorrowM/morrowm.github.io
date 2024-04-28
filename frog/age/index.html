@@ -57,9 +57,9 @@
     </div>
 
     <script>
-        const dob = new Date('1995-04-27');
+        const dob = new Date('April 27, 1995 00:00:00');
 
-        const ageDate = new Date(Date.now() - dob.getTime());
+        const ageDate = new Date(Date.now() - dob.getTime() - 1000 * 60 * 60 * 24);
         const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 
         document.getElementById('age').textContent = age;
