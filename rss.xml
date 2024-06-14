@@ -633,6 +633,8 @@ Done!</code></pre>
         <p><a href="https://hackage.haskell.org/package/calamity"><code>calamity</code></a> is the most fully-featured library for writing Discord bots on Hackage, rivaling frameworks like <code>discord.py</code> and <code>discord.js</code> in features, while offering all the benefits of Haskell: a strong type system, pure functions, and risk-free refactoring. It may however seem impenetrable at first glance, using many language extensions such as <code>TypeApplications</code>, <code>TypeFamilies</code>, and <code>DataKinds</code>. It also uses the <a href="https://hackage.haskell.org/package/polysemy"><code>polysemy</code></a> effect system rather than the more common <a href="https://hackage.haskell.org/package/mtl"><code>mtl</code></a>. The end result, however, is a very nice interface for making bots.</p>
 <p>This post is intended to guide those less familiar with this part of the Haskell ecosystem on how to write their own bots using <code>calamity</code> and hopefully come out of the experience with a greater understanding of how to use these features and how they can be leveraged in their own programs and libraries. It’s possible to use <code>calamity</code> without understanding all the types involved, but it becomes significantly harder to debug and to understand any error messages you may get.</p>
 <p>I recommend following along with the <a href="https://hackage.haskell.org/package/calamity">Hackage documentation</a> open. You can search the haddocks by pressing <code>s</code> to open a search dialogue.</p>
+<h3 id="preface">Preface</h3>
+<p>The code in this tutorial may not be updated to work with the latest version of calamity. I’ll try to keep the code at the associated <a href="https://github.com/MorrowM/calamity-tutorial">git repository</a> updated. If it doesn’t build for you, don’t be afraid to open an issue or pull request.</p>
 <h2 id="libraries">Libraries</h2>
 <h3 id="polysemy"><code>polysemy</code></h3>
 <p>When writing real-world IO-heavy applications, it’s almost always advantageous to use an effect system for storing configuration data, error handling, incorporating state, etc. A common choice is <code>mtl</code>, the monad transformer library. <code>polysemy</code> is another such effect system that opts for working in a single monad, the <code>Sem r</code> monad, which is parameterized by a type-level list of effects, called the “effect row”.</p>
@@ -680,7 +682,15 @@ Done!</code></pre>
 <h3 id="di-and-di-polysemy"><code>di</code> and <code>di-polysemy</code></h3>
 <p><code>di</code> is a fully-featured structured logging library. <code>di-polysemy</code> provides <code>polysemy</code> style effects for <code>di</code>. This is what <code>calamity</code> uses for logging.</p>
 <h3 id="lens"><code>lens</code></h3>
-<p>For a full understanding of how lens works, there are better resources such as the excellent <a href="https://artyom.me/lens-over-tea-1">lens over tea</a>. This will just be a quick overview of the basic usage of lenses for those who aren’t familiar with them.</p>
+<hr />
+<p><strong>Update:</strong> As of <code>calamity-0.5.0.0</code>, the <code>optics</code> library is used instead of <code>lens</code> and <code>generic-lens</code>. <code>optics</code> is an alternative to <code>lens</code> which aims to provide better error messages. What this means in practice is:</p>
+<ul>
+<li>Some imports have changed.</li>
+<li>Composition of lenses is done with the <code>(%)</code> operator from <code>optics</code> instead of <code>(.)</code>.</li>
+<li><code>generic-lens</code> is no longer needed. Instead, <code>calamity</code> itself provides the appropriate instances required to make <code>OverloadedLabels</code> work.</li>
+</ul>
+<hr />
+<p>For a full understanding of how lens works, there are better resources such as the excellent <a href="https://web.archive.org/web/20210521023726/https://artyom.me/lens-over-tea-1">lens over tea</a>. This will just be a quick overview of the basic usage of lenses for those who aren’t familiar with them.</p>
 <p>A lens can be thought of as a value that focuses on some part of a larger structure, such as a field in a record. For example, <code>lens</code> provides the <code>_1</code> lens which focuses on the first element of a tuple. We can use a lens to extract part of a value with the <code>view</code> function or its operator counterpart, <code>(^.)</code>:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode hs"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> view (<span class="ch">&#39;a&#39;</span>, <span class="dv">5</span>) _1</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ch">&#39;a&#39;</span></span>
